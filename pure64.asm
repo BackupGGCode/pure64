@@ -1,6 +1,6 @@
 ; =============================================================================
 ; Pure64 -- a 64-bit OS loader written in Assembly for x86-64 systems
-; Copyright (C) 2008-2010 Return Infinity -- see LICENSE.TXT
+; Copyright (C) 2008-2011 Return Infinity -- see LICENSE.TXT
 ;
 ; Loaded from the first stage. Gather information about the system while
 ; in 16-bit mode (BIOS is still accessable), setup a minimal 64-bit
@@ -256,6 +256,9 @@ start64:
 	mov [0x000B809C], al
 	mov al, '0'
 	mov [0x000B809E], al
+	mov al, 2
+	mov ah, 22
+	call os_move_cursor
 
 	xor rax, rax			; aka r0
 	xor rbx, rbx			; aka r3
@@ -264,7 +267,7 @@ start64:
 	xor rsi, rsi			; aka r6
 	xor rdi, rdi			; aka r7
 	xor rbp, rbp			; aka r5
-	xor rsp, rsp			; aka r4
+	mov rsp, 0x8000			; aka r4
 	xor r8, r8
 	xor r9, r9
 	xor r10, r10
@@ -286,15 +289,15 @@ start64:
 clearcs64:
 	xor rax, rax
 
-	; Reset the stack. Each CPU gets a 1024-byte unique stack location
-	xor rsi, rsi
-	mov esi, [os_LocalAPICAddress]	; We would call os_smp_get_id here but the stack is not ...
-	add rsi, 0x20			; ... yet defined. It is safer to find the value directly.
-	lodsd				; Load a 32-bit value. We only want the high 8 bits
-	shr rax, 24			; Shift to the right and AL now holds the CPU's APIC ID
-	shl rax, 10			; shift left 10 bits for a 1024byte stack
-	add rax, 0x0000000000050400	; stacks decrement when you "push", start at 1024 bytes in
-	mov rsp, rax			; Pure64 leaves 0x50000-0x9FFFF free so we use that
+;	; Reset the stack. Each CPU gets a 1024-byte unique stack location
+;	; This is before we have the APIC Address!!! FIX THIS
+;	mov rsi, [os_LocalAPICAddress]	; We would call os_smp_get_id here but the stack is not ...
+;	add rsi, 0x20			; ... yet defined. It is safer to find the value directly.
+;	lodsd				; Load a 32-bit value. We only want the high 8 bits
+;	shr rax, 24			; Shift to the right and AL now holds the CPU's APIC ID
+;	shl rax, 10			; shift left 10 bits for a 1024byte stack
+;	add rax, 0x0000000000050400	; stacks decrement when you "push", start at 1024 bytes in
+;	mov rsp, rax			; Pure64 leaves 0x50000-0x9FFFF free so we use that
 
 	lgdt [GDTR64]			; Reload the GDT
 
@@ -380,6 +383,10 @@ make_interrupt_gates: 			; make gates for the other interrupts
 	mov word [0x12*16], exception_gate_18
 	mov word [0x13*16], exception_gate_19
 
+	mov rdi, 0x20			; Set up Timer IRQ handler
+	mov rax, timer
+	call create_gate
+
 	lidt [IDTR64]			; load IDT register
 
 ; Debug
@@ -441,6 +448,15 @@ clearmapnext:
 
 ; Init of SMP
 	call smp_setup
+	
+; Reset the stack to the proper location (was set to 0x8000 previously)
+	mov rsi, [os_LocalAPICAddress]	; We would call os_smp_get_id here but the stack is not ...
+	add rsi, 0x20			; ... yet defined. It is safer to find the value directly.
+	lodsd				; Load a 32-bit value. We only want the high 8 bits
+	shr rax, 24			; Shift to the right and AL now holds the CPU's APIC ID
+	shl rax, 10			; shift left 10 bits for a 1024byte stack
+	add rax, 0x0000000000050400	; stacks decrement when you "push", start at 1024 bytes in
+	mov rsp, rax			; Pure64 leaves 0x50000-0x9FFFF free so we use that
 
 ; Debug
 	mov al, '2'
@@ -481,16 +497,14 @@ endmemcalc:
 	mov word [mem_amount], cx
 
 ; Calculate speed of CPU
-	call take_timing_measurements
-	call calculate_cpu_clockspeed
-	xor rax, rax
+; Get a better method.. parse the CPU ID string?
 	mov ax, [cpu_speed]
 	mov rdi, speedtempstring
 	call os_int_to_string
 
 ; Convert CPU amount value to string
 	xor rax, rax
-	mov ax, [cpu_amount]
+	mov ax, [cpu_activated]
 	mov rdi, cpu_amount_string
 	call os_int_to_string
 
@@ -502,15 +516,17 @@ endmemcalc:
 
 ; Build the infomap
 	mov rdi, 0x000000000000F000
-	mov eax, [os_LocalAPICAddress]
-	stosd
-	mov eax, [os_IOAPICAddress]
-	stosd
+	mov rax, [os_LocalAPICAddress]
+	stosq
+	mov rax, [os_IOAPICAddress]
+	stosq
 
 	mov rdi, 0x000000000000F010
 	mov ax, [cpu_speed]
 	stosw
-	mov ax, [cpu_amount]
+	mov ax, [cpu_activated]
+	stosw
+	mov ax, [cpu_detected]
 	stosw
 
 	mov rdi, 0x000000000000F020
@@ -521,16 +537,7 @@ endmemcalc:
 	mov ax, [cfg_mbr]
 	stosb
 
-; Debug
-	mov al, ' '
-;	mov [0x000B809A], al
-	mov [0x000B809C], al
-	mov [0x000B809E], al
-
 ; Initialization is now complete... write a message to the screen
-	mov al, 2
-	mov ah, 22
-	call os_move_cursor
 	mov rsi, msg_done
 	call os_print_string
 
@@ -585,6 +592,10 @@ nodefaultconfig:
 ; Load 64-bit kernel from drive to 0x0000000000010000
 	mov rdi, 0x0000000000100000
 readfile_getdata:
+	push rax
+	mov al, '!'
+	call os_print_char
+	pop rax
 	call readcluster	; store in memory
 	cmp ax, 0xFFFF		; Value for end of cluster chain.
 	jne readfile_getdata	; Are there more clusters? If so then read again.. if not fall through.
@@ -598,6 +609,12 @@ readfile_getdata:
 	call os_move_cursor
 	mov rsi, msg_startingkernel
 	call os_print_string
+
+; Debug
+	mov al, ' '
+	mov [0x000B809A], al
+	mov [0x000B809C], al
+	mov [0x000B809E], al
 
 ; Clear all registers (skip the stack pointer)
 	xor rax, rax			; aka r0

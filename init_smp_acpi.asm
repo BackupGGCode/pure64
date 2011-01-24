@@ -1,6 +1,6 @@
 ; =============================================================================
 ; Pure64 -- a 64-bit OS loader written in Assembly for x86-64 systems
-; Copyright (C) 2008-2010 Return Infinity -- see LICENSE.TXT
+; Copyright (C) 2008-2011 Return Infinity -- see LICENSE.TXT
 ;
 ; INIT SMP ACPI
 ; =============================================================================
@@ -9,7 +9,10 @@
 init_smp_acpi:
 	mov al, 'A'
 	mov [0x000B809A], al
-	add rsi, 7			; Skip the Checksum and OEMID for now
+
+	lodsb				; Checksum
+	lodsd				; OEMID (First 4 bytes)
+	lodsw				; OEMID (Last 2 bytes)
 	lodsb				; Grab the Revision value (0 is v1.0, 1 is v2.0, 2 is v3.0, etc)
 	cmp al, 0
 	je foundACPIv1
@@ -25,7 +28,8 @@ foundACPIv1:
 	jmp findAPIC
 
 foundACPIv2:
-	add rsi, 8
+	lodsd				; RSDT Address
+	lodsd				; Length
 	lodsq				; Grab the 64 bit physical address of the XSDT (Offset 24).
 	mov rsi, rax			; RSI now points to the XSDT
 	lodsd				; Grab the Signiture
@@ -45,12 +49,70 @@ searchingforAPIC:
 	jmp searchingforAPIC
 
 foundAPIC:
-	add rsi, 32
-	lodsd
-	mov [os_LocalAPICAddress], eax	; Save the Address of the Local APIC
+	lodsd				; Length of MADT in bytes
+	mov ecx, eax
+	xor ebx, ebx
+	lodsb				; Revision
+	lodsb				; Checksum
+	lodsd				; OEMID (First 4 bytes)
+	lodsw				; OEMID (Last 2 bytes)
+	lodsq				; OEM Table ID
+	lodsd				; OEM Revision
+	lodsd				; Creator ID
+	lodsd				; Creator Revision
+	xor eax, eax
+	lodsd				; Local APIC Address
+	mov [os_LocalAPICAddress], rax	; Save the Address of the Local APIC
+	lodsd				; Flags
+	add ebx, 44
+	mov rdi, 0x000000000000F800
+xchg bx, bx
+readAPICstructures:
+	cmp ebx, ecx
+	jge init_smp_acpi_done
+	lodsb				; APIC Structure Type
+	cmp al, 0
+	je APICcpu
+	cmp al, 1
+	je APICioapic
+	jmp APICignore
+
+APICcpu:
+	inc word [cpu_detected]
+	xor eax, eax
+	lodsb				; Length (will be set to 8)
+	add ebx, eax
+	lodsb				; ACPI Processor ID
+	lodsb				; APIC ID
+	push rdi
+	add rdi, rax
+	lodsd				; Flags
+	stosb
+	pop rdi
+	jmp readAPICstructures		; Read the next structure
+
+APICioapic:
+	xor eax, eax
+	lodsb				; Length (will be set to 12)
+	add ebx, eax
+	lodsb				; IO APIC ID
+	lodsb				; Reserved
+	xor eax, eax
+	lodsd				; IO APIC Address
+	mov [os_IOAPICAddress], rax
+	lodsd				; System Vector Base
+	jmp readAPICstructures		; Read the next structure
+
+APICignore:
+	xor eax, eax
+	lodsb				; We have a type that we ignore, read the next byte
+	add ebx, eax
+	add rsi, rax
+	sub rsi, 2			; For the two bytes just read
+	jmp readAPICstructures		; Read the next structure
 
 init_smp_acpi_done:
-	ret
+	jmp makempgonow
 
 novalidacpi:
 	mov al, 'X'

@@ -1,6 +1,6 @@
 ; =============================================================================
 ; Pure64 -- a 64-bit OS loader written in Assembly for x86-64 systems
-; Copyright (C) 2008-2010 Return Infinity -- see LICENSE.TXT
+; Copyright (C) 2008-2011 Return Infinity -- see LICENSE.TXT
 ;
 ; INIT CPU
 ; =============================================================================
@@ -9,16 +9,16 @@
 init_cpu:
 
 ; Check for Prefetcher and L2 Cache support
-;	mov r15b, 1			; Set MSR support to 1
-;	xor eax, eax
-;	mov al, 1			; Access CPUID leaf 1
-;	cpuid
-;	shr rax, 8			; Family now in AL (lowest 4 bits)
-;	and al, 0x0F			; Clear the high 4 bits
-;	cmp al, 0x0F
-;	jne init_cpu_msrok		; If Family is not 0xF then jump
-;	mov r15b, 0			; If it is 0xF (Older P4/Xeon) then set MSR support to 0
-;init_cpu_msrok:
+	mov r15b, 1			; Set MSR support to 1
+	xor eax, eax
+	mov al, 1			; Access CPUID leaf 1
+	cpuid
+	shr rax, 8			; Family now in AL (lowest 4 bits)
+	and al, 0x0F			; Clear the high 4 bits
+	cmp al, 0x0F
+	jne init_cpu_msrok		; If Family is not 0xF then jump
+	mov r15b, 0			; If it is 0xF (Older P4/Xeon) then set MSR support to 0
+init_cpu_msrok:
 
 ; Disable Cache
 	mov rax, cr0
@@ -64,16 +64,16 @@ init_cpu:
 ; Setup variable-size address ranges
 ; Cache 0-64 MiB as type 6 (WB) cache
 ; See example in Intel Volume 3A. Example Base and Mask Calculations
-	mov ecx, 0x00000200		; MTRR_Phys_Base_MSR(0)
-	mov edx, 0x00000000		; Base is EDX:EAX, 0x0000000000000006
-	mov eax, 0x00000006		; Type 6 (write-back cache)
-	wrmsr
-	mov ecx, 0x00000201		; MTRR_Phys_Mask_MSR(0)
-;	mov edx, 0x00000000		; Mask is EDX:EAX, 0x0000000001000800 (Because bochs has errors)
-;	mov eax, 0x01000800		; Bit 11 set for Valid
-	mov edx, 0x0000000F		; Mask is EDX:EAX, 0x0000000F80000800 (2 GiB)
-	mov eax, 0x80000800		; Bit 11 set for Valid
-	wrmsr
+;	mov ecx, 0x00000200		; MTRR_Phys_Base_MSR(0)
+;	mov edx, 0x00000000		; Base is EDX:EAX, 0x0000000000000006
+;	mov eax, 0x00000006		; Type 6 (write-back cache)
+;	wrmsr
+;	mov ecx, 0x00000201		; MTRR_Phys_Mask_MSR(0)
+;;	mov edx, 0x00000000		; Mask is EDX:EAX, 0x0000000001000800 (Because bochs sucks)
+;;	mov eax, 0x01000800		; Bit 11 set for Valid
+;	mov edx, 0x0000000F		; Mask is EDX:EAX, 0x0000000F80000800 (2 GiB)
+;	mov eax, 0x80000800		; Bit 11 set for Valid
+;	wrmsr
 
 ; MTRR notes:
 ; Base 0x0000000000000000 = 0 MiB

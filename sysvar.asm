@@ -1,6 +1,6 @@
 ; =============================================================================
 ; Pure64 -- a 64-bit OS loader written in Assembly for x86-64 systems
-; Copyright (C) 2008-2010 Return Infinity -- see LICENSE.TXT
+; Copyright (C) 2008-2011 Return Infinity -- see LICENSE.TXT
 ;
 ; System Variables
 ; =============================================================================
@@ -8,7 +8,8 @@
 
 ;CPU
 cpu_speed:		dw 0x0000	; MHz 
-cpu_amount:		dw 0x0000	; Number of CPU cores in system
+cpu_activated:		dw 0x0000	; Number of CPU cores activated
+cpu_detected:		dw 0x0000	; Number of CPU cores detected
 
 ;MEM
 mem_amount:		dw 0x0000	; MB
@@ -29,6 +30,7 @@ screen_cursor_y:	db 0x00
 screen_cursor_offset:	dq 0x0000000000000000
 hdbuffer:		equ 0x0000000000070000	; 32768 bytes = 0x6000 -> 0xDFFF VERIFY THIS!!!
 hdbuffer1:		equ 0x000000000007E000	; 512 bytes = 0xE000 -> 0xE1FF VERIFY THIS!!!
+os_Counter:		equ 0x000000000000F900
 
 ;CONFIG
 cfg_smpinit:		db 1	; By default SMP is enabled so set to 1
@@ -53,18 +55,18 @@ msg_loadingkernel:	db 'Loading software...', 0
 msg_startingkernel:	db 'Starting software.', 0
 msg_noconfig:		db '(default config)', 0
 no64msg:		db 'FATAL ERROR: CPU does not support 64-bit mode. Please run on supported hardware.', 0
-initStartupMsg:		db 'Pure64 v0.4.7 - http://www.returninfinity.com', 13, 10, 13, 10, 'Initializing system...', 0
-msg_date:		db '2010/11/17', 0
+initStartupMsg:		db 'Pure64 v0.4.7-dev - http://www.returninfinity.com', 13, 10, 13, 10, 'Initializing system...', 0
+msg_date:		db '2011/01/19', 0
 
 ; Multi-processor variables
-os_MPTableAddress:		dd 0x00000000
-os_MPBaseTableLength:		dw 0x0000
-os_MPExtendedTableLength:	dw 0x0000
-os_MPTableEntriesAddress:	dd 0x00000000
-os_MPTableEntriesLength:	dw 0x0000
-os_MPTableEntriesCount:		dw 0x0000
-os_LocalAPICAddress:		dd 0x00000000
-os_IOAPICAddress:		dd 0x00000000
+;os_MPTableAddress:		dd 0x00000000
+;os_MPBaseTableLength:		dw 0x0000
+;os_MPExtendedTableLength:	dw 0x0000
+;os_MPTableEntriesAddress:	dd 0x00000000
+;os_MPTableEntriesLength:	dw 0x0000
+;os_MPTableEntriesCount:		dw 0x0000
+os_LocalAPICAddress:		dq 0x0000000000000000	; Default adddres for LAPIC
+os_IOAPICAddress:		dq 0x0000000000000000	; Default address for IOAPIC
 
 ; HDD variables
 fat16_BytesPerSector:		dw 0x0000

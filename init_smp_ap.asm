@@ -1,10 +1,9 @@
 ; =============================================================================
 ; Pure64 -- a 64-bit OS loader written in Assembly for x86-64 systems
-; Copyright (C) 2008-2010 Return Infinity -- see LICENSE.TXT
+; Copyright (C) 2008-2011 Return Infinity -- see LICENSE.TXT
 ;
 ; INIT SMP AP
 ; =============================================================================
-
 
 USE16
 
@@ -137,7 +136,7 @@ clearcs64_ap:
 	xor rax, rax
 
 	; Reset the stack. Each CPU gets a 1024-byte unique stack location
-	mov esi, [os_LocalAPICAddress]	; We would call os_smp_get_id here but the stack is not ...
+	mov rsi, [os_LocalAPICAddress]	; We would call os_smp_get_id here but the stack is not ...
 	add rsi, 0x20			; ... yet defined. It is safer to find the value directly.
 	lodsd				; Load a 32-bit value. We only want the high 8 bits
 	shr rax, 24			; Shift to the right and AL now holds the CPU's APIC ID
@@ -149,8 +148,7 @@ clearcs64_ap:
 	lidt [IDTR64]			; load IDT register
 
 ; Enable Local APIC on AP
-	xor rsi, rsi
-	mov esi, [os_LocalAPICAddress]
+	mov rsi, [os_LocalAPICAddress]
 	add rsi, 0x00f0			; Offset to Spurious Interrupt Register
 	mov rdi, rsi
 	lodsd
@@ -167,10 +165,9 @@ clearcs64_ap:
 ;	div rax
 
 	lock
-	inc word [cpu_amount]
+	inc word [cpu_activated]
 	xor eax, eax
-	xor esi, esi
-	mov esi, [os_LocalAPICAddress]
+	mov rsi, [os_LocalAPICAddress]
 	add rsi, 0x20			; Add the offset for the APIC ID location
 	lodsd				; APIC ID is stored in bits 31:24
 	shr rax, 24			; AL now holds the CPU's APIC ID (0 - 255)
