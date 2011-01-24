@@ -1,6 +1,6 @@
 ; =============================================================================
 ; Pure64 -- a 64-bit OS loader written in Assembly for x86-64 systems
-; Copyright (C) 2008-2010 Return Infinity -- see LICENSE.TXT
+; Copyright (C) 2008-2011 Return Infinity -- see LICENSE.TXT
 ;
 ; INIT ISA
 ; =============================================================================
@@ -11,9 +11,11 @@ isa_setup:
 ; Get the BIOS E820 Memory Map
 ; use the INT 0x15, eax= 0xE820 BIOS function to get a memory map
 ; inputs: es:di -> destination buffer for 24 byte entries
+; outputs: bp = entry count, trashes all registers except esi
 do_e820:
 	mov edi, 0x0000E000		; location that memory map will be stored to
 	xor ebx, ebx			; ebx must be 0 to start
+	xor bp, bp			; keep an entry count in bp
 	mov edx, 0x0534D4150		; Place "SMAP" into edx
 	mov eax, 0xe820
 	mov [es:di + 20], dword 1	; force a valid ACPI 3.X entry
@@ -34,20 +36,21 @@ e820lp:
 	jc memmapend			; carry set means "end of list already reached"
 	mov edx, 0x0534D4150		; repair potentially trashed register
 jmpin:
-	jcxz skipentry			; skip any 0 length entries
+	jcxz skipent			; skip any 0 length entries
 	cmp cl, 20			; got a 24 byte ACPI 3.X response?
 	jbe notext
 	test byte [es:di + 20], 1	; if so: is the "ignore this data" bit clear?
-	je skipentry
+	je skipent
 notext:
 	mov ecx, [es:di + 8]		; get lower dword of memory region length
 	test ecx, ecx			; is the qword == 0?
-	jne goodentry
+	jne goodent
 	mov ecx, [es:di + 12]		; get upper dword of memory region length
-	jecxz skipentry			; if length qword is 0, skip entry
-goodentry:
+	jecxz skipent			; if length qword is 0, skip entry
+goodent:
+	inc bp				; got a good entry: ++count, move to next storage spot
 	add di, 32
-skipentry:
+skipent:
 	test ebx, ebx			; if ebx resets to 0, list is complete
 	jne e820lp
 nomemmap:
@@ -77,12 +80,12 @@ check_A20:
 	mov ah, 0
 	int 14h
 
-; Set the PIT to fire at 100Hz (Divisor = 1193180 / hz)
-	mov al, 0x34			; Set Timer
+; Set PIT Channel 0 to fire at 100Hz (Divisor = 1193180 / hz)
+	mov al, 0x36			; Set Timer
 	out 0x43, al
-	mov al, 0x9B			; We want 100MHz so 0x2E9B
-	out 0x40, al
-	mov al, 0x2E
+	mov al, 0xA9			; We want 100MHz so 0x2E9B
+	out 0x40, al			; 1000MHz would be 0x04A9
+	mov al, 0x04
 	out 0x40, al
 
 ; Set keyboard repeat rate to max
@@ -107,7 +110,7 @@ check_A20:
 	out 0x71, al
 
 ; Remap IRQ's
-; What will it take to activate the IOAPIC and ditch the 8259 PIC?
+; As heard on an episode of Jerry Springer.. "It's time to lose the zero (8259 PIC) and get with a hero (IOAPIC)".
 ; http://osdever.net/tutorials/apicarticle.php
 	mov al, 00010001b		; begin PIC 1 initialization
 	out 0x20, al
@@ -126,7 +129,7 @@ check_A20:
 	out 0xA1, al
 	
 	in al, 0x21
-	mov al, 11111111b		; Disable all IRQs
+	mov al, 11111110b		; Disable all IRQs except for timer
 	out 0x21, al
 	in al, 0xA1
 	mov al, 11111111b

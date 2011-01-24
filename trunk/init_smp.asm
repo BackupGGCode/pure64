@@ -1,24 +1,17 @@
 ; =============================================================================
 ; Pure64 -- a 64-bit OS loader written in Assembly for x86-64 systems
-; Copyright (C) 2008-2010 Return Infinity -- see LICENSE.TXT
+; Copyright (C) 2008-2011 Return Infinity -- see LICENSE.TXT
 ;
 ; INIT SMP
 ; =============================================================================
 
+;MP_debugmsg: db 'MP_CODE!', 0
+
 
 smp_setup:
+	sti				; Enable the timer
 
-smp_check_for_mp:			; Look for the MP Floating Pointer Structure
-	mov rsi, 0x00000000000F0000	; We want to start looking here
-	mov ebx, '_MP_'			; This in the Anchor String for the MP Structure Table
-searchingforMP:
-	lodsd				; Load a double word from RSI and store in EAX, then increment RSI by 4
-	cmp eax, ebx
-	je foundMP
-	cmp rsi, 0x00000000000FFFFF	; Keep looking until we get here
-	jge smp_check_for_acpi		; We can't find a MP.. try ACPI
-	jmp searchingforMP
-
+; Step 1: Get APIC Information via ACPI
 smp_check_for_acpi:			; Look for the Root System Description Pointer Structure
 	mov rsi, 0x00000000000E0000	; We want to start looking here
 	mov rbx, 'RSD PTR '		; This in the Signature for the ACPI Structure Table (0x2052545020445352)
@@ -28,22 +21,16 @@ searchingforACPI:
 	je foundACPI
 	cmp rsi, 0x00000000000FFFFF	; Keep looking until we get here
 	jge noMP			; We can't find ACPI either.. bail out and default to single cpu mode
-	jmp searchingforACPI
+	jmp searchingforACPI 
 
 foundACPI:
-	call init_smp_acpi
-	jmp makempgonow
-
-foundMP:
-	call init_smp_mp
+	jmp init_smp_acpi 
 
 makempgonow:
 
-
-; Step 3: Enable Local APIC on BSP
-	xor esi, esi
-	mov esi, [os_LocalAPICAddress]
-	cmp esi, 0x00000000
+; Step 2: Enable Local APIC on BSP
+	mov rsi, [os_LocalAPICAddress]
+	cmp rsi, 0x00000000
 	je noMP				; Skip MP init if we didn't get a valid LAPIC address
 	add rsi, 0xf0			; Offset to Spurious Interrupt Register
 	mov rdi, rsi
@@ -51,95 +38,115 @@ makempgonow:
 	or eax, 0000000100000000b
 	stosd
 
-; Check if we want the AP's to be enabled.. if not then skip step 4
-	cmp byte [cfg_smpinit], 1	; Check if SMP should be enabled
-	jne no_smp			; If not then skip SMP init
+; Check if we want the AP's to be enabled.. if not then skip to end
+;	cmp byte [cfg_smpinit], 1	; Check if SMP should be enabled
+;	jne noMP			; If not then skip SMP init
 
-; Step 4: Start the AP's
-	mov eax, 0xFF000000		; broadcast 'INIT' IPI to all-except-self
-	xor edi, edi
-	mov edi, [os_LocalAPICAddress]
+; Step 3: Start the AP's one by one
+	xor eax, eax
+	xor ecx, ecx
+	xor edx, edx
+	mov rsi, [os_LocalAPICAddress]
+	add rsi, 0x20		; Add the offset for the APIC ID location
+	lodsd			; APIC ID is stored in bits 31:24
+	shr rax, 24		; AL now holds the BSP CPU's APIC ID
+	mov dl, al		; Store BSP APIC ID in DL
+	mov rsi, 0x000000000000F800
+	xor eax, eax
+
+nextcore:
+	cmp rsi, 0x000000000000F900
+	je done
+	lodsb
+	cmp al, 1		; Is it enabled?
+	jne skipcore
+
+	push rax
+	mov al, cl
+	add al, 48
+	call os_print_char
+	pop rax
+
+	cmp cl, dl		; Is it the BSP?
+	je skipcore
+
+; Broadcast 'INIT' IPI to APIC ID in AL
+	mov al, cl
+	shl eax, 24
+	mov rdi, [os_LocalAPICAddress]
 	add rdi, 0x310
 	stosd
-
-	mov eax, 0x000C4500
-	xor edi, edi
-	mov edi, [os_LocalAPICAddress]
+	mov eax, 0x00004500
+	mov rdi, [os_LocalAPICAddress]
 	add rdi, 0x300
 	stosd
-
-	; DELAY 10 milliseconds. A millisecond is one thousandth of a second.
-	mov eax, 10000			; ten-thousand microseconds (aka 10 milliseconds)
-	call delay_EAX_microseconds	; execute programmed delay
-
-.B0:
-	xor esi, esi
-	mov esi, [os_LocalAPICAddress]
+	push rsi
+verifyinit:
+	mov rsi, [os_LocalAPICAddress]
 	add rsi, 0x300
 	lodsd
 	bt eax, 12			; Verify that the command completed
-	jc .B0
+	jc verifyinit
+	pop rsi
 
-; broadcast 'Startup' IPI to all-except-self using vector 0x0A to specify entry-point is at the memory-address 0x0000A000
-	mov eax, 0xFF000000
-	xor edi, edi
-	mov edi, [os_LocalAPICAddress]
+	mov rax, [os_Counter]
+	add rax, 10
+wait1:
+	mov rbx, [os_Counter]
+	cmp rax, rbx
+	jg wait1
+
+; Broadcast 'Startup' IPI to destination using vector 0x0A to specify entry-point is at the memory-address 0x0000A000
+	mov al, cl
+	shl eax, 24
+	mov rdi, [os_LocalAPICAddress]
 	add rdi, 0x310
 	stosd
-
-	mov eax, 0x000C460A
-	xor edi, edi
-	mov edi, [os_LocalAPICAddress]
+	mov eax, 0x0000460A		; Vector 0x0A
+	mov rdi, [os_LocalAPICAddress]
 	add rdi, 0x300
 	stosd
-
-	mov eax, 200			; DELAY 200 microseconds. A microsecond is one millionth of a second.
-	call delay_EAX_microseconds	; execute programmed delay
-
-.B1:
-	xor esi, esi
-	mov esi, [os_LocalAPICAddress]
+	push rsi
+verifystartup1:
+	mov rsi, [os_LocalAPICAddress]
 	add rsi, 0x300
 	lodsd
 	bt eax, 12			; Verify that the command completed
-	jc .B1
-	mov eax, 250000			; delay 1/4 of a second to let things settle down
-	call delay_EAX_microseconds	; execute programmed delay
+	jc verifystartup1
+	pop rsi
 
-; broadcast 'Startup' IPI to all-except-self using vector 0x0A to specify entry-point is at the memory-address 0x0000A000
-	mov eax, 0x000C460A
-	xor edi, edi
-	mov edi, [os_LocalAPICAddress]
-	add rdi, 0x300
-	stosd
+	mov rax, [os_Counter]
+	add rax, 2
+wait2:
+	mov rbx, [os_Counter]
+	cmp rax, rbx
+	jg wait2
 
-	mov eax, 200			; DELAY 200 microseconds. A microsecond is one millionth of a second.
-	call delay_EAX_microseconds	; execute programmed delay
+skipcore:
+	inc cl
+	jmp nextcore
 
-.B2:
-	xor esi, esi
-	mov esi, [os_LocalAPICAddress]
-	add rsi, 0x300
-	lodsd
-	bt eax, 12			; Verify that the command completed
-	jc .B2
-	mov eax, 250000			; delay 1/4 of a second to let things settle down
-	call delay_EAX_microseconds	; execute programmed delay
+done:
 
-no_smp:
+; Let things settle (Give the AP's some time to finish)
+	mov rax, [os_Counter]
+	add rax, 10
+wait3:
+	mov rbx, [os_Counter]
+	cmp rax, rbx
+	jg wait3
 
-; Prepare the IOAPIC
+; Step 4: Prepare the IOAPIC
+; To be coded...
 
+; Step 5: Finish up
 
-
-	
 noMP:
 	lock
-	inc word [cpu_amount]		; BSP adds one here
+	inc word [cpu_activated]	; BSP adds one here
 
 	xor eax, eax
-	xor esi, esi
-	mov esi, [os_LocalAPICAddress]
+	mov rsi, [os_LocalAPICAddress]
 	add rsi, 0x20			; Add the offset for the APIC ID location
 	lodsd				; APIC ID is stored in bits 31:24
 	shr rax, 24			; AL now holds the CPU's APIC ID (0 - 255)
@@ -148,61 +155,12 @@ noMP:
 	mov al, 3			; This is the BSP so bits 0 and 1 are set
 	stosb
 
+	cli				; Disable the timer
+
 ret
 
 
-;------------------------------------------------------------------------------
-; This helper-function will implement the timed delays which are
-; specified in Intel's 'Multiprocessor Initialization Protocol',
-; where the delay-duration (in microseconds) is in register EAX.
-; 1 second = 1000000 microseconds
-; 1 milisecond = 1000 microseconds
-delay_EAX_microseconds:
-	push rax
-	push rcx
-
-	mov ecx, eax			; copy microseconds count
-
-	; enable the 8254 Channel-2 counter
-	in al, 0x61			; get PORT_B settings
-	and al, 0x0D			; turn PC speaker off
-	or al, 0x01			; turn on Gate2 input
-	out 0x61, al			; output new settings
-
-	; program channel-2 for one-shot countdown
-	mov al, 0xB0			; chan2,LSB/MSB,one-shot
-	out 0x43, al			; output command to PIT 
-
-	; compute value for channel-2 latch-register
-	mov eax, 1193182		; input-pulses-per-second
-	mul ecx				; * number of microseconds
-	mov ecx, 1000000		; microseconds-per-second
-	div ecx				; division by doubleword
-
-	; write latch-resister value to channel-2
-	out 0x42, al
-	mov al, ah
-	out 0x42, al
-	
-	; wait for channel-2 countdown to conclude
-nxpoll:
-	in al, 0x61
-	test al, 0x20
-	jz nxpoll
-
-	; disable the 8254 Channel-2 counter
-	in al, 0x61			; get PORT_B settings
-	and al, 0x0C			; turn off channel-2 
-	out 0x61, al			; output new settings
-
-	pop rcx
-	pop rax
-	ret
-;------------------------------------------------------------------------------
-
-
 %include "init_smp_acpi.asm"
-%include "init_smp_mp.asm"
 
 
 ; =============================================================================

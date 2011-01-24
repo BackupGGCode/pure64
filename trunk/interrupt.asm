@@ -1,10 +1,9 @@
 ; =============================================================================
 ; Pure64 -- a 64-bit OS loader written in Assembly for x86-64 systems
-; Copyright (C) 2008-2010 Return Infinity -- see LICENSE.TXT
+; Copyright (C) 2008-2011 Return Infinity -- see LICENSE.TXT
 ;
 ; Interrupts
 ; =============================================================================
-
 
 
 ; -----------------------------------------------------------------------------
@@ -21,6 +20,17 @@ exception_gate:
 ; -----------------------------------------------------------------------------
 ; Default interrupt handler
 interrupt_gate:				; handler for all other interrupts
+	iretq
+; -----------------------------------------------------------------------------
+
+
+; -----------------------------------------------------------------------------
+; Real-time clock interrupt. IRQ 0x00, INT 0x20
+align 16
+timer:
+	add qword [os_Counter], 1	; 64-bit counter started at bootup
+	mov al, 0x20			; Acknowledge the IRQ
+	out 0x20, al
 	iretq
 ; -----------------------------------------------------------------------------
 

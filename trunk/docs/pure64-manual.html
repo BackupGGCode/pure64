@@ -8,7 +8,7 @@
 
 <body>
 <div class="container">
-<h1><b>Pure64 v0.4.7 - Manual</b></h1>
+<h1><b>Pure64 v0.4.7-dev - Manual</b></h1>
 <p>
 Pure64 currently works with the FAT16 file system. This file system was chosen because it is the most compatible between other OS's (Windows, Mac, Linux, etc).<br />
 Pure64 loads your software (OS kernel, Demo, etc) to memory address 0x0000000000100000 (The start of the second megabyte of RAM). Once your software is loaded into memory Pure64 will start to run it. At this point Pure64 is done and your software is in full control of the computer.
@@ -50,9 +50,8 @@ The Pure64 information table is located at 0x000000000000F000 and ends at 0x0000
 
 <table border="1" cellpadding="2" cellspacing="0">
 <tr><th>Memory Address</th><th>Variable Size</th><th>Name</th><th>Description</th></tr>
-<tr><td>0xF000</td><td>32-bit</td><td>LAPIC</td><td>Local APIC address</td></tr>
-<tr><td>0xF004</td><td>32-bit</td><td>IOAPIC</td><td>IO APIC address</td></tr>
-<tr><td>0xF008 - 0xF00F</td><td>&nbsp;</td><td>&nbsp;</td><td>For future use</td></tr>
+<tr><td>0xF000</td><td>64-bit</td><td>LAPIC</td><td>Local APIC address</td></tr>
+<tr><td>0xF008</td><td>64-bit</td><td>IOAPIC</td><td>IO APIC address</td></tr>
 <tr><td>0xF010</td><td>16-bit</td><td>CPUSPEED</td><td>Speed of the CPUs in MegaHertz (<a href="http://en.wikipedia.org/wiki/Mhz#Computing">MHz</a>)</td></tr>
 <tr><td>0xF012</td><td>16-bit</td><td>NUMCPUS</td><td>The number of available CPU cores in the system</td></tr>
 <tr><td>0xF014 - 0xF01F</td><td>&nbsp;</td><td>&nbsp;</td><td>For future use</td></tr>

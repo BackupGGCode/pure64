@@ -1,6 +1,6 @@
 ; =============================================================================
 ; Pure64 -- a 64-bit OS loader written in Assembly for x86-64 systems
-; Copyright (C) 2008-2010 Return Infinity -- see LICENSE.TXT
+; Copyright (C) 2008-2011 Return Infinity -- see LICENSE.TXT
 ;
 ; System Calls
 ; =================================================================
@@ -385,76 +385,6 @@ os_int_to_string_next_digit:
 
 
 ; -----------------------------------------------------------------------------
-take_timing_measurements:
-	; turn on input to timer channel 2
-	in al, 0x61
-	and al, 0xFC
-	or al, 0x01
-	out 0x61, al
-
-	; program the interval-timer's channel 2
-	mov al, 0xB0		; ch2, one-shot, lsb/msb
-	out 0x43, al		; output command to PIT
-	mov dx, 65535		; latch-register value
-	mov al, dl		; latch-register's LSB
-	out 0x42, al		; written to channel 2
-	mov al, dh		; latch-register's MSB
-	out 0x42, al		; written to channel 2
-
-	; save the TimeStamp Counter's value  
-	rdtsc			; read TimeStamp Counter
-	mov [stamp0+0], eax	; save bits 31..0
-	mov [stamp0+4], edx	; save bits 63..32
-
-	; use 'polling' to wait for the timer-counter to expire 
-spint:
-	in al, 0x61		; input PORT_B settings
-	test al, 0x20		; test channel-2 status
-	jz spint		; again if not expired 
-
-	; save the TimeStamp Counter's value  
-	rdtsc			; read TimeStamp Counter
-	mov [stamp1+0], eax	; save bits 31..0
-	mov [stamp1+4], edx	; save bits 63..32
-
-	ret
-
-stamp0: dq 0
-stamp1: dq 0
-cycles: dq 0
-; -----------------------------------------------------------------------------
-
-
-; -----------------------------------------------------------------------------
-calculate_cpu_clockspeed:
-	; compute elapsed CPU cycles (= stamp1 - stamp0)
-	mov eax, [stamp1+0]
-	mov edx, [stamp1+4]
-	sub eax, [stamp0+0]
-	sbb edx, [stamp0+4]
-	mov [cycles+0], eax
-	mov [cycles+4], edx
-
-	; compute CPU cycles-per-second = cycles * CLK_HERTZ / PIT_LATCH
-;	mov eax, [cycles+0]
-	mov ecx, 1193182
-	mul ecx
-	mov ecx, 65535
-	div ecx
-; At this point EAX holds the value in Hz (hertz)
-; Divide by 1000000 to get MHz (megahertz)
-	xor edx, edx	; clear EDX since DIV uses EDX:EAX
-	mov ecx, 1000000
-	div ecx
-	mov [cpu_speed], ax	
-
-	ret
-	
-; 2.33 GHz CPU returns 2333 (or so)
-; -----------------------------------------------------------------------------
-
-
-; -----------------------------------------------------------------------------
 ; os_int_to_hex_string -- Convert an integer to a hex string
 ;  IN:	RAX = Integer value
 ;	RDI = location to store string
@@ -509,6 +439,28 @@ os_serial_send_wait:
 
 	pop rdx
 	ret
+; -----------------------------------------------------------------------------
+
+
+; -----------------------------------------------------------------------------
+; create_gate
+; rax = address of handler
+; rdi = gate # to configure
+create_gate:
+	push rdi
+	push rax
+	
+	shl rdi, 4	; quickly multiply rdi by 16
+	stosw		; store the low word (15..0)
+	shr rax, 16
+	add rdi, 4	; skip the gate marker
+	stosw		; store the high word (31..16)
+	shr rax, 16
+	stosd		; store the high dword (63..32)
+
+	pop rax
+	pop rdi
+ret
 ; -----------------------------------------------------------------------------
 
 
