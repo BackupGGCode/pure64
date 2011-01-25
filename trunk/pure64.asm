@@ -137,7 +137,7 @@ start32:
 	mov esp, 0x8000			; Set a known free location for the stack
 
 ; Debug
-	mov al, '1'
+	mov al, '1'			; Now in 32-bit protected mode
 	mov [0x000B809C], al
 	mov al, '0'
 	mov [0x000B809E], al
@@ -229,7 +229,7 @@ pd_again:				; Create a 2 MiB page
 	wrmsr				; Write EFER
 
 ; Debug
-	mov al, '1'
+	mov al, '1'			; About to make the jump into 64-bit mode
 	mov [0x000B809C], al
 	mov al, 'E'
 	mov [0x000B809E], al
@@ -252,10 +252,11 @@ USE64
 
 start64:
 ; Debug
-	mov al, '2'
+	mov al, '2'			; Now in 64-bit mode
 	mov [0x000B809C], al
 	mov al, '0'
 	mov [0x000B809E], al
+
 	mov al, 2
 	mov ah, 22
 	call os_move_cursor
@@ -288,16 +289,6 @@ start64:
 	nop				; .. out of compatibilty mode and into 64-bit mode
 clearcs64:
 	xor rax, rax
-
-;	; Reset the stack. Each CPU gets a 1024-byte unique stack location
-;	; This is before we have the APIC Address!!! FIX THIS
-;	mov rsi, [os_LocalAPICAddress]	; We would call os_smp_get_id here but the stack is not ...
-;	add rsi, 0x20			; ... yet defined. It is safer to find the value directly.
-;	lodsd				; Load a 32-bit value. We only want the high 8 bits
-;	shr rax, 24			; Shift to the right and AL now holds the CPU's APIC ID
-;	shl rax, 10			; shift left 10 bits for a 1024byte stack
-;	add rax, 0x0000000000050400	; stacks decrement when you "push", start at 1024 bytes in
-;	mov rsp, rax			; Pure64 leaves 0x50000-0x9FFFF free so we use that
 
 	lgdt [GDTR64]			; Reload the GDT
 
@@ -408,7 +399,7 @@ clearmapnext:
 	call init_cpu			; Setup CPU
 
 ; Debug
-	mov al, '2'
+	mov al, '2'			; CPU Init complete
 	mov [0x000B809C], al
 	mov al, '6'
 	mov [0x000B809E], al
@@ -423,7 +414,7 @@ clearmapnext:
 	call hdd_setup			; Gather Hard Drive information
 
 ; Debug
-	mov al, '2'
+	mov al, '2'			; HDD Init complete
 	mov [0x000B809C], al
 	mov al, '8'
 	mov [0x000B809E], al
@@ -459,7 +450,7 @@ clearmapnext:
 	mov rsp, rax			; Pure64 leaves 0x50000-0x9FFFF free so we use that
 
 ; Debug
-	mov al, '2'
+	mov al, '2'			; SMP Init complete
 	mov [0x000B809C], al
 	mov al, 'A'
 	mov [0x000B809E], al
@@ -592,10 +583,10 @@ nodefaultconfig:
 ; Load 64-bit kernel from drive to 0x0000000000010000
 	mov rdi, 0x0000000000100000
 readfile_getdata:
-	push rax
-	mov al, '!'
-	call os_print_char
-	pop rax
+;	push rax
+;	mov al, '!'
+;	call os_print_char
+;	pop rax
 	call readcluster	; store in memory
 	cmp ax, 0xFFFF		; Value for end of cluster chain.
 	jne readfile_getdata	; Are there more clusters? If so then read again.. if not fall through.
@@ -611,7 +602,7 @@ readfile_getdata:
 	call os_print_string
 
 ; Debug
-	mov al, ' '
+	mov al, ' '			; Clear the debug messages
 	mov [0x000B809A], al
 	mov [0x000B809C], al
 	mov [0x000B809E], al

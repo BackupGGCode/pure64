@@ -59,12 +59,6 @@ initStartupMsg:		db 'Pure64 v0.4.8-dev - http://www.returninfinity.com', 13, 10,
 msg_date:		db '2011/01/24', 0
 
 ; Multi-processor variables
-;os_MPTableAddress:		dd 0x00000000
-;os_MPBaseTableLength:		dw 0x0000
-;os_MPExtendedTableLength:	dw 0x0000
-;os_MPTableEntriesAddress:	dd 0x00000000
-;os_MPTableEntriesLength:	dw 0x0000
-;os_MPTableEntriesCount:		dw 0x0000
 os_LocalAPICAddress:		dq 0x0000000000000000	; Default adddres for LAPIC
 os_IOAPICAddress:		dq 0x0000000000000000	; Default address for IOAPIC
 
