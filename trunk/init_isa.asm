@@ -80,7 +80,7 @@ check_A20:
 	mov ah, 0
 	int 14h
 
-; Set PIT Channel 0 to fire at 100Hz (Divisor = 1193180 / hz)
+; Set PIT Channel 0 to fire at 1000Hz (Divisor = 1193180 / hz)
 	mov al, 0x36			; Set Timer
 	out 0x43, al
 	mov al, 0xA9			; We want 100MHz so 0x2E9B
@@ -127,7 +127,7 @@ check_A20:
 	mov al, 1
 	out 0x21, al
 	out 0xA1, al
-	
+
 	in al, 0x21
 	mov al, 11111110b		; Disable all IRQs except for timer
 	out 0x21, al
