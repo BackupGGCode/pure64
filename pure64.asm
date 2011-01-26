@@ -576,9 +576,9 @@ nodefaultconfig:
 ; Uncomment the following 5 lines if you are chainloading
 ;	mov rsi, 0x8000+10240	; Memory offset to end of pure64.sys
 ;	mov rdi, 0x100000	; Destination address at the 1MiB mark
-;	mov rcx, 16384/8	; For a 16KiB kernel
-;	rep movsq
-;	jmp fini
+;	mov rcx, 0x800		; For a 16KiB kernel (2048 x 8)
+;	rep movsq		; Copy 8 bytes at a time
+;	jmp fini		; Print starting message and jump to kernel
 ; =============================================================================	
 
 ; Print a message that the kernel is being loaded
@@ -597,7 +597,7 @@ nodefaultconfig:
 	mov rdi, 0x0000000000100000
 readfile_getdata:
 ;	push rax
-;	mov al, '!'
+;	mov al, '.'		; Show loading progress
 ;	call os_print_char
 ;	pop rax
 	call readcluster	; store in memory
@@ -608,13 +608,13 @@ readfile_getdata:
 	mov rsi, msg_done
 	call os_print_string
 
+fini:	; For chainloading
+
 ; Print a message that the kernel is being started
 	mov ax, 0x0008
 	call os_move_cursor
 	mov rsi, msg_startingkernel
 	call os_print_string
-
-fini:	; For chainloading
 
 ; Debug
 	mov al, ' '			; Clear the debug messages
