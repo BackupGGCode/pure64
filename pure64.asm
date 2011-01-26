@@ -568,6 +568,19 @@ nodefaultconfig:
 	mov rsi, msg_mb
 	call os_print_string
 
+; =============================================================================
+; Chainload the kernel attached to the end of the pure64.sys binary
+; Windows - copy /b pure64.sys + kernel64.sys
+; Unix - cat pure64.sys kernel64.sys > pure64.sys
+; Max size of the resulting pure64.sys is 28672 bytes
+; Uncomment the following 5 lines if you are chainloading
+;	mov rsi, 0x8000+10240	; Memory offset to end of pure64.sys
+;	mov rdi, 0x100000	; Destination address at the 1MiB mark
+;	mov rcx, 16384/8	; For a 16KiB kernel
+;	rep movsq
+;	jmp fini
+; =============================================================================	
+
 ; Print a message that the kernel is being loaded
 	mov ax, 0x0006
 	call os_move_cursor
@@ -600,6 +613,8 @@ readfile_getdata:
 	call os_move_cursor
 	mov rsi, msg_startingkernel
 	call os_print_string
+
+fini:	; For chainloading
 
 ; Debug
 	mov al, ' '			; Clear the debug messages
