@@ -66,7 +66,7 @@ foundAPIC:
 	lodsd				; Flags
 	add ebx, 44
 	mov rdi, 0x000000000000F800
-xchg bx, bx
+
 readAPICstructures:
 	cmp ebx, ecx
 	jge init_smp_acpi_done

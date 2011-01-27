@@ -91,15 +91,17 @@ ret
 readsectors:
 	push rdx
 	push rcx
+	push rbx
 	push rax
 
 	push rcx		; Save RCX for use in the read loop
+	mov rbx, rcx		; Store number of sectors to read
 	cmp rcx, 256
 	jg readsectors_fail	; Over 256? Fail!
 	jne readsectors_skip	; Not 256? No need to modify CL
 	xor rcx, rcx		; 0 translates to 256
 readsectors_skip:
-	
+
 	push rax		; Save RAX since we are about to overwrite it
 	mov dx, 0x01F2		; 0x01F2 - Sector count Port 7:0
 	mov al, cl		; Read CL sectors
@@ -122,16 +124,40 @@ readsectors_skip:
 	mov al, 0x20		; Read sector(s). 0x24 if LBA48
 	out dx, al
 
-readsectors_wait:		; VERIFY THIS
-	in al, dx
-	test al, 8		; This means the sector buffer requires servicing.
-	jz readsectors_wait	; Don't continue until the sector buffer is ready.
-	pop rcx
-	shl rcx, 8		; Multiply RCX by 256 to get the amount of words that will be read
-	mov dx, 0x01F0		; Data port - data comes in and out of here.
-	rep insw		; Read data to the address starting at RDI
+	mov rcx, 4
+readsectors_wait:
+	in al, dx		; Read status from 0x01F7
+	test al, 0x80		; BSY flag set?
+	jne readsectors_retry
+	test al, 0x08		; DRQ set?
+	jne readsectors_dataready
+readsectors_retry:
+	dec rcx
+	jg readsectors_wait
+readsectors_nextsector:
+	in al, dx		; Read status from 0x01F7
+	test al, 0x80		; BSY flag set?
+	jne readsectors_nextsector
+	test al, 0x21		; ERR or DF set?
+	jne readsectors_fail
 
+readsectors_dataready:
+	sub dx, 7		; Data port (0x1F0)
+	mov rcx, 256		; Read 
+	rep insw		; Copy a 512 byte sector to RDI
+	add dx, 7		; Set DX back to status register (0x01F7)
+	in al, dx		; Delay ~400ns to allow drive to set new values of BSY and DRQ
+	in al, dx
+	in al, dx
+	in al, dx
+
+	dec rbx			; RBX is the "sectors to read" counter
+	cmp rbx, 0
+	jne readsectors_nextsector
+
+	pop rcx
 	pop rax
+	pop rbx
 	add rax, rcx
 	pop rcx
 	pop rdx
@@ -140,6 +166,7 @@ ret
 readsectors_fail:
 	pop rcx
 	pop rax
+	pop rbx
 	pop rcx
 	pop rdx
 	xor rcx, rcx		; Set RCX to 0 since nothing was read
