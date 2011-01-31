@@ -171,7 +171,7 @@ clearcs64_ap:
 	add rsi, 0x20			; Add the offset for the APIC ID location
 	lodsd				; APIC ID is stored in bits 31:24
 	shr rax, 24			; AL now holds the CPU's APIC ID (0 - 255)
-	mov rdi, 0x0000F700		; The location where the cpu values are stored
+	mov rdi, 0x00005700		; The location where the cpu values are stored
 	add rdi, rax			; RDI points to infomap CPU area + APIC ID. ex F701 would be APIC ID 1
 	mov al, 1
 	stosb

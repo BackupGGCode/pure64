@@ -65,7 +65,7 @@ foundAPIC:
 	mov [os_LocalAPICAddress], rax	; Save the Address of the Local APIC
 	lodsd				; Flags
 	add ebx, 44
-	mov rdi, 0x000000000000F800
+	mov rdi, 0x0000000000005800
 
 readAPICstructures:
 	cmp ebx, ecx

@@ -141,9 +141,9 @@ start32:
 	mov [0x000B809C], al
 	mov al, '0'
 	mov [0x000B809E], al
-	
-; Clear out the first 32768 bytes of memory. This will store the 64-bit IDT, GDT, PML4, etc
-	mov ecx, 8192
+
+; Clear out the first 4096 bytes of memory. This will store the 64-bit IDT, GDT, PML4, and PDP
+	mov ecx, 1024
 	xor eax, eax
 	mov edi, eax
 	rep stosd
@@ -457,7 +457,7 @@ clearmapnext:
 
 ; Calculate amount of usable RAM from Memory Map
 	xor rcx, rcx
-	mov rsi, 0x000000000000E000	; E820 Map location
+	mov rsi, 0x0000000000004000	; E820 Map location
 readnextrecord:
 	lodsq
 	lodsq
@@ -506,13 +506,13 @@ endmemcalc:
 	call os_int_to_string
 
 ; Build the infomap
-	mov rdi, 0x000000000000F000
+	mov rdi, 0x0000000000005000
 	mov rax, [os_LocalAPICAddress]
 	stosq
 	mov rax, [os_IOAPICAddress]
 	stosq
 
-	mov rdi, 0x000000000000F010
+	mov rdi, 0x0000000000005010
 	mov ax, [cpu_speed]
 	stosw
 	mov ax, [cpu_activated]
@@ -520,11 +520,11 @@ endmemcalc:
 	mov ax, [cpu_detected]
 	stosw
 
-	mov rdi, 0x000000000000F020
+	mov rdi, 0x0000000000005020
 	mov ax, [mem_amount]
 	stosw
 
-	mov rdi, 0x000000000000F030
+	mov rdi, 0x0000000000005030
 	mov ax, [cfg_mbr]
 	stosb
 

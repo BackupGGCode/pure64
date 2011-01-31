@@ -51,11 +51,11 @@ makempgonow:
 	lodsd			; APIC ID is stored in bits 31:24
 	shr rax, 24		; AL now holds the BSP CPU's APIC ID
 	mov dl, al		; Store BSP APIC ID in DL
-	mov rsi, 0x000000000000F800
+	mov rsi, 0x0000000000005800
 	xor eax, eax
 
 nextcore:
-	cmp rsi, 0x000000000000F900
+	cmp rsi, 0x0000000000005900
 	je done
 	lodsb
 	cmp al, 1		; Is it enabled?
@@ -150,7 +150,7 @@ noMP:
 	add rsi, 0x20			; Add the offset for the APIC ID location
 	lodsd				; APIC ID is stored in bits 31:24
 	shr rax, 24			; AL now holds the CPU's APIC ID (0 - 255)
-	mov rdi, 0x0000F700		; The location where the cpu values are stored
+	mov rdi, 0x00005700		; The location where the cpu values are stored
 	add rdi, rax			; RDI points to infomap CPU area + APIC ID. ex F701 would be APIC ID 1
 	mov al, 3			; This is the BSP so bits 0 and 1 are set
 	stosb
