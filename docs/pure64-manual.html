@@ -8,7 +8,7 @@
 
 <body>
 <div class="container">
-<h1><b>Pure64 v0.4.7-dev - Manual</b></h1>
+<h1><b>Pure64 v0.4.8-dev - Manual</b></h1>
 <p>
 Pure64 currently works with the FAT16 file system. This file system was chosen because it is the most compatible between other OS's (Windows, Mac, Linux, etc).<br />
 Pure64 loads your software (OS kernel, Demo, etc) to memory address 0x0000000000100000 (The start of the second megabyte of RAM). Once your software is loaded into memory Pure64 will start to run it. At this point Pure64 is done and your software is in full control of the computer.
@@ -46,29 +46,30 @@ When creating your Operating System or Demo you can use the sections marked free
 <h2>Information table:</h2>
 
 Pure64 stores an information table in memory that contains various pieces of data about the computer before it passes control over to the software you want it to load.
-The Pure64 information table is located at 0x000000000000F000 and ends at 0x000000000000F7FF (2048 bytes).
+The Pure64 information table is located at 0x0000000000005000 and ends at 0x00000000000057FF (2048 bytes).
 
 <table border="1" cellpadding="2" cellspacing="0">
 <tr><th>Memory Address</th><th>Variable Size</th><th>Name</th><th>Description</th></tr>
-<tr><td>0xF000</td><td>64-bit</td><td>LAPIC</td><td>Local APIC address</td></tr>
-<tr><td>0xF008</td><td>64-bit</td><td>IOAPIC</td><td>IO APIC address</td></tr>
-<tr><td>0xF010</td><td>16-bit</td><td>CPUSPEED</td><td>Speed of the CPUs in MegaHertz (<a href="http://en.wikipedia.org/wiki/Mhz#Computing">MHz</a>)</td></tr>
-<tr><td>0xF012</td><td>16-bit</td><td>NUMCPUS</td><td>The number of available CPU cores in the system</td></tr>
-<tr><td>0xF014 - 0xF01F</td><td>&nbsp;</td><td>&nbsp;</td><td>For future use</td></tr>
-<tr><td>0xF020</td><td>16-bit</td><td>RAMAMOUNT</td><td>Amount of system RAM in Mebibytes (<a href="http://en.wikipedia.org/wiki/Mebibyte">MiB</a>)</td></tr>
-<tr><td>0xF022 - 0xF6FF</td><td>&nbsp;</td><td>&nbsp;</td><td>For future use</td></tr>
-<tr><td>0xF700</td><td>8-bit</td><td>CPUFLAG0</td><td>Flags for CPU with APIC ID 0</td></tr>
-<tr><td>0xF701</td><td>8-bit</td><td>CPUFLAG1</td><td>Flags for CPU with APIC ID 1</td></tr>
-<tr><td>0xF702</td><td>8-bit</td><td>CPUFLAG2</td><td>Flags for CPU with APIC ID 2</td></tr>
-<tr><td>0xF703</td><td>8-bit</td><td>CPUFLAG3</td><td>Flags for CPU with APIC ID 3</td></tr>
-<tr><td>0xF704 - 0xF7FB</td><td>&nbsp;</td><td>&nbsp;</td><td>Flags for CPU with APIC ID 4 thru to 251</td></tr>
-<tr><td>0xF7FC</td><td>8-bit</td><td>CPUFLAG252</td><td>Flags for CPU with APIC ID 252</td></tr>
-<tr><td>0xF7FD</td><td>8-bit</td><td>CPUFLAG253</td><td>Flags for CPU with APIC ID 253</td></tr>
-<tr><td>0xF7FE</td><td>8-bit</td><td>CPUFLAG254</td><td>Flags for CPU with APIC ID 254</td></tr>
-<tr><td>0xF7FF</td><td>8-bit</td><td>CPUFLAG255</td><td>Flags for CPU with APIC ID 255</td></tr>
+<tr><td>0x5000</td><td>64-bit</td><td>LAPIC</td><td>Local APIC address</td></tr>
+<tr><td>0x5008</td><td>64-bit</td><td>IOAPIC</td><td>IO APIC address</td></tr>
+<tr><td>0x5010</td><td>16-bit</td><td>CPUSPEED</td><td>Speed of the CPUs in MegaHertz (<a href="http://en.wikipedia.org/wiki/Mhz#Computing">MHz</a>)</td></tr>
+<tr><td>0x5012</td><td>16-bit</td><td>CORES_ACTIVE</td><td>The number of CPU cores that were activated in the system</td></tr>
+<tr><td>0x5014</td><td>16-bit</td><td>CORES_DETECT</td><td>The number of CPU cores that were detected in the system</td></tr>
+<tr><td>0x5016 - 0x501F</td><td>&nbsp;</td><td>&nbsp;</td><td>For future use</td></tr>
+<tr><td>0x5020</td><td>16-bit</td><td>RAMAMOUNT</td><td>Amount of system RAM in Mebibytes (<a href="http://en.wikipedia.org/wiki/Mebibyte">MiB</a>)</td></tr>
+<tr><td>0x5022 - 0x56FF</td><td>&nbsp;</td><td>&nbsp;</td><td>For future use</td></tr>
+<tr><td>0x5700</td><td>8-bit</td><td>CPUFLAG0</td><td>Flags for CPU with APIC ID 0</td></tr>
+<tr><td>0x5701</td><td>8-bit</td><td>CPUFLAG1</td><td>Flags for CPU with APIC ID 1</td></tr>
+<tr><td>0x5702</td><td>8-bit</td><td>CPUFLAG2</td><td>Flags for CPU with APIC ID 2</td></tr>
+<tr><td>0x5703</td><td>8-bit</td><td>CPUFLAG3</td><td>Flags for CPU with APIC ID 3</td></tr>
+<tr><td>0x5704 - 0x57FB</td><td>&nbsp;</td><td>&nbsp;</td><td>Flags for CPU with APIC ID 4 thru to 251</td></tr>
+<tr><td>0x57FC</td><td>8-bit</td><td>CPUFLAG252</td><td>Flags for CPU with APIC ID 252</td></tr>
+<tr><td>0x57FD</td><td>8-bit</td><td>CPUFLAG253</td><td>Flags for CPU with APIC ID 253</td></tr>
+<tr><td>0x57FE</td><td>8-bit</td><td>CPUFLAG254</td><td>Flags for CPU with APIC ID 254</td></tr>
+<tr><td>0x57FF</td><td>8-bit</td><td>CPUFLAG255</td><td>Flags for CPU with APIC ID 255</td></tr>
 </table>
 For the CPU Flags: Bit 0 is set if the CPU is enabled, Bit 1 is set if the CPU is the BSP. If Bit 0 for a CPU is not set then do not attempt to make use of it.<p />
-A copy of the E820 System Memory Map is stored at memory address 0x000000000000E000. Each E820 record is 24 bytes in length and the memory map is terminated by a blank record.<p />
+A copy of the E820 System Memory Map is stored at memory address 0x0000000000004000. Each E820 record is 24 bytes in length and the memory map is terminated by a blank record.<p />
 <table border="1" cellpadding="2" cellspacing="0">
 <tr><th>Variable</th><th>Variable Size</th><th>Description</th></tr>
 <tr><td>Starting Address</td><td>64-bit</td><td>The starting address for this record</td></tr>
