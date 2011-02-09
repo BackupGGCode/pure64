@@ -15,17 +15,35 @@ init_smp_acpi:
 	lodsw				; OEMID (Last 2 bytes)
 	lodsb				; Grab the Revision value (0 is v1.0, 1 is v2.0, 2 is v3.0, etc)
 	cmp al, 0
-	je foundACPIv1
-	jmp foundACPIv2
+	je foundACPIv1			; If AL is 0 then the system is using ACPI v1.0
+	jmp foundACPIv2			; Otherwise it is v2.0 or higher
 
 foundACPIv1:
+
 	xor eax, eax
 	lodsd				; Grab the 32 bit physical address of the RSDT (Offset 16).
 	mov rsi, rax
 	lodsd
 	cmp eax, 'RSDT'
 	jne novalidacpi
-	jmp findAPIC
+	sub rsi, 4
+	mov [os_ACPITableAddress], rsi	; Save the RSDT Table Address
+	add rsi, 4
+	xor eax, eax
+	xchg bx, bx
+	lodsd				; Length
+	add rsi, 28			; Skip to the Entry offset
+	sub eax, 0x24
+	shr eax, 2			; EAX holds the number of entries
+	mov rdx, rax			; RDX is the entry count
+	xor ecx, ecx
+foundACPIv1_nextentry:
+	lodsd
+	push rax
+	add ecx, 1
+	cmp ecx, edx
+	je findAPICTable
+	jmp foundACPIv1_nextentry
 
 foundACPIv2:
 	lodsd				; RSDT Address
@@ -35,22 +53,45 @@ foundACPIv2:
 	lodsd				; Grab the Signiture
 	cmp eax, 'XSDT'
 	jne novalidacpi
+	sub rsi, 4
+	mov [os_ACPITableAddress], rsi	; Save the XSDT Table Address
+	add rsi, 4
+	xor eax, eax
+	lodsd				; Length
+	add rsi, 28			; Skip to the Entry offset
+	sub eax, 0x24
+	shr eax, 2			; EAX holds the number of entries
+	mov rdx, rax			; RDX is the entry count
+	xor ecx, ecx
+foundACPIv2_nextentry:
+	lodsq
+	push rax
+	add ecx, 1
+	cmp ecx, edx
+	jne foundACPIv2_nextentry
 
-findAPIC:
-	mov [os_ACPITableAddress], rsi
-
-	mov ebx, 'APIC'			; This in the signature for the Multiple APIC Description Table
-	mov ecx, 1000
+findAPICTable:
+	mov ebx, 'APIC'
+	xor ecx, ecx
 searchingforAPIC:
-	lodsd				; Load a double word from RSI and store in EAX, then increment RSI by 4
-	dec ecx
+	pop rsi
+	lodsd
+	add ecx, 1
 	cmp eax, ebx
-	je foundAPIC
-	cmp ecx, 0			; Keep looking until we get here
-	je noMP				; We can't find a MP either.. bail out and default to single cpu mode
-	jmp searchingforAPIC
+	je foundAPICTable
+	cmp ecx, edx
+	jne searchingforAPIC
+	jmp noMP
 
-foundAPIC:
+fixstack:
+	pop rax
+	add ecx, 1
+
+foundAPICTable:
+	; fix the stack
+	cmp ecx, edx
+	jne fixstack
+
 	lodsd				; Length of MADT in bytes
 	mov ecx, eax
 	xor ebx, ebx
