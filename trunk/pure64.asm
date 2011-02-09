@@ -525,8 +525,12 @@ endmemcalc:
 	stosw
 
 	mov rdi, 0x0000000000005030
-	mov ax, [cfg_mbr]
+	mov al, [cfg_mbr]
 	stosb
+
+	mov rdi, 0x0000000000005040
+	mov rax, [os_ACPITableAddress]
+	stosq
 
 ; Initialization is now complete... write a message to the screen
 	mov rsi, msg_done

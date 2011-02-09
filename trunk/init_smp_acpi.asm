@@ -36,7 +36,9 @@ foundACPIv2:
 	cmp eax, 'XSDT'
 	jne novalidacpi
 
-findAPIC:	
+findAPIC:
+	mov [os_ACPITableAddress], rsi
+
 	mov ebx, 'APIC'			; This in the signature for the Multiple APIC Description Table
 	mov ecx, 1000
 searchingforAPIC:

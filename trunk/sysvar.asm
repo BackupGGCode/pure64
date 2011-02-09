@@ -62,6 +62,9 @@ msg_date:		db '2011/01/24', 0
 os_LocalAPICAddress:		dq 0x0000000000000000	; Default adddres for LAPIC
 os_IOAPICAddress:		dq 0x0000000000000000	; Default address for IOAPIC
 
+; Misc
+os_ACPITableAddress:		dq 0x0000000000000000
+
 ; HDD variables
 fat16_BytesPerSector:		dw 0x0000
 fat16_SectorsPerCluster:	db 0x00
