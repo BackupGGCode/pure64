@@ -61,11 +61,11 @@ nextcore:
 	cmp al, 1		; Is it enabled?
 	jne skipcore
 
-	push rax
-	mov al, cl
-	add al, 48
-	call os_print_char
-	pop rax
+;	push rax
+;	mov al, cl
+;	add al, 48
+;	call os_print_char
+;	pop rax
 
 	cmp cl, dl		; Is it the BSP?
 	je skipcore
