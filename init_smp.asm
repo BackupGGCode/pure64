@@ -155,6 +155,28 @@ noMP:
 	mov al, 3			; This is the BSP so bits 0 and 1 are set
 	stosb
 
+; Calculate speed of CPU (At this point the timer is firing at 1000Hz)
+	xchg bx, bx
+	cpuid
+	xor edx, edx
+	xor eax, eax
+	mov rcx, [os_Counter]
+	add rcx, 10
+	rdtsc
+	push rax
+speedtest:
+	mov rbx, [os_Counter]
+	cmp rbx, rcx
+	jl speedtest
+	rdtsc
+	pop rdx
+	sub rax, rdx
+	xor edx, edx
+	mov rcx, 20000
+	div rcx
+
+	mov [cpu_speed], ax
+
 	cli				; Disable the timer
 	
 ; Set PIT Channel 0 to fire at 100Hz (Divisor = 1193180 / hz)
