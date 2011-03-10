@@ -55,8 +55,8 @@ msg_loadingkernel:	db 'Loading software...', 0
 msg_startingkernel:	db 'Starting software.', 0
 msg_noconfig:		db '(default config)', 0
 no64msg:		db 'FATAL ERROR: CPU does not support 64-bit mode. Please run on supported hardware.', 0
-initStartupMsg:		db 'Pure64 v0.4.8 - http://www.returninfinity.com', 13, 10, 13, 10, 'Initializing system...', 0
-msg_date:		db '2011/02/10', 0
+initStartupMsg:		db 'Pure64 v0.4.9-dev - http://www.returninfinity.com', 13, 10, 13, 10, 'Initializing system...', 0
+msg_date:		db '2011/03/10', 0
 
 ; Multi-processor variables
 os_LocalAPICAddress:		dq 0x0000000000000000	; Default adddres for LAPIC

@@ -450,9 +450,9 @@ clearmapnext:
 	mov rsp, rax			; Pure64 leaves 0x50000-0x9FFFF free so we use that
 
 ; Debug
-	mov al, '2'			; SMP Init complete
+	mov al, '3'			; SMP Init complete
 	mov [0x000B809C], al
-	mov al, 'A'
+	mov al, 'E'
 	mov [0x000B809E], al
 
 ; Calculate amount of usable RAM from Memory Map

@@ -7,8 +7,8 @@
 
 
 init_smp_acpi:
-	mov al, 'A'
-	mov [0x000B809A], al
+;	mov al, 'A'
+;	mov [0x000B809A], al
 
 	lodsb				; Checksum
 	lodsd				; OEMID (First 4 bytes)
@@ -30,7 +30,6 @@ foundACPIv1:
 	mov [os_ACPITableAddress], rsi	; Save the RSDT Table Address
 	add rsi, 4
 	xor eax, eax
-	xchg bx, bx
 	lodsd				; Length
 	add rsi, 28			; Skip to the Entry offset
 	sub eax, 0x24
@@ -71,6 +70,10 @@ foundACPIv2_nextentry:
 	jne foundACPIv2_nextentry
 
 findAPICTable:
+	mov al, '3'			; Seacrh for the APIC table
+	mov [0x000B809C], al
+	mov al, '4'
+	mov [0x000B809E], al
 	mov ebx, 'APIC'
 	xor ecx, ecx
 searchingforAPIC:

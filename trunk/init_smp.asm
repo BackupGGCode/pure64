@@ -10,6 +10,10 @@
 
 smp_setup:
 	sti				; Enable the timer
+	mov al, '3'			; Start of MP init
+	mov [0x000B809C], al
+	mov al, '0'
+	mov [0x000B809E], al
 
 ; Step 1: Get APIC Information via ACPI
 smp_check_for_acpi:			; Look for the Root System Description Pointer Structure
@@ -23,10 +27,19 @@ searchingforACPI:
 	jge noMP			; We can't find ACPI either.. bail out and default to single cpu mode
 	jmp searchingforACPI 
 
+	mov al, '3'			; ACPI tables detected
+	mov [0x000B809C], al
+	mov al, '2'
+	mov [0x000B809E], al
+
 foundACPI:
 	jmp init_smp_acpi 
 
 makempgonow:
+	mov al, '3'			; ACPI tables parsed
+	mov [0x000B809C], al
+	mov al, '6'
+	mov [0x000B809E], al
 
 ; Step 2: Enable Local APIC on BSP
 	mov rsi, [os_LocalAPICAddress]
@@ -128,6 +141,11 @@ skipcore:
 
 done:
 
+	mov al, '3'
+	mov [0x000B809C], al
+	mov al, '8'
+	mov [0x000B809E], al
+
 ; Let things settle (Give the AP's some time to finish)
 	mov rax, [os_Counter]
 	add rax, 10
@@ -155,6 +173,11 @@ noMP:
 	mov al, 3			; This is the BSP so bits 0 and 1 are set
 	stosb
 
+	mov al, '3'
+	mov [0x000B809C], al
+	mov al, 'A'
+	mov [0x000B809E], al
+
 ; Calculate speed of CPU (At this point the timer is firing at 1000Hz)
 	xchg bx, bx
 	cpuid
@@ -174,8 +197,12 @@ speedtest:
 	xor edx, edx
 	mov rcx, 20000
 	div rcx
-
 	mov [cpu_speed], ax
+
+	mov al, '3'
+	mov [0x000B809C], al
+	mov al, 'C'
+	mov [0x000B809E], al
 
 	cli				; Disable the timer
 	
