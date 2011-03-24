@@ -7,33 +7,32 @@
 
 
 init_smp_acpi:
-;	mov al, 'A'
-;	mov [0x000B809A], al
-
 	lodsb				; Checksum
 	lodsd				; OEMID (First 4 bytes)
 	lodsw				; OEMID (Last 2 bytes)
 	lodsb				; Grab the Revision value (0 is v1.0, 1 is v2.0, 2 is v3.0, etc)
+	add al, 49
+	mov [0x000B8098], al		; Print the ACPI version number
+	sub al, 49
 	cmp al, 0
 	je foundACPIv1			; If AL is 0 then the system is using ACPI v1.0
 	jmp foundACPIv2			; Otherwise it is v2.0 or higher
 
 foundACPIv1:
-
 	xor eax, eax
 	lodsd				; Grab the 32 bit physical address of the RSDT (Offset 16).
-	mov rsi, rax
-	lodsd
-	cmp eax, 'RSDT'
-	jne novalidacpi
+	mov rsi, rax			; RSI now points to the RSDT
+	lodsd				; Grab the Signiture
+	cmp eax, 'RSDT'			; Make sure the signiture is valid
+	jne novalidacpi			; Not the same? Bail out
 	sub rsi, 4
 	mov [os_ACPITableAddress], rsi	; Save the RSDT Table Address
 	add rsi, 4
 	xor eax, eax
 	lodsd				; Length
 	add rsi, 28			; Skip to the Entry offset
-	sub eax, 0x24
-	shr eax, 2			; EAX holds the number of entries
+	sub eax, 36			; EAX holds the table size. Subtract the preamble
+	shr eax, 2			; Divide by 4
 	mov rdx, rax			; RDX is the entry count
 	xor ecx, ecx
 foundACPIv1_nextentry:
@@ -50,16 +49,16 @@ foundACPIv2:
 	lodsq				; Grab the 64 bit physical address of the XSDT (Offset 24).
 	mov rsi, rax			; RSI now points to the XSDT
 	lodsd				; Grab the Signiture
-	cmp eax, 'XSDT'
-	jne novalidacpi
+	cmp eax, 'XSDT'			; Make sure the signiture is valid
+	jne novalidacpi			; Not the same? Bail out
 	sub rsi, 4
 	mov [os_ACPITableAddress], rsi	; Save the XSDT Table Address
 	add rsi, 4
 	xor eax, eax
 	lodsd				; Length
-	add rsi, 28			; Skip to the Entry offset
-	sub eax, 0x24
-	shr eax, 2			; EAX holds the number of entries
+	add rsi, 28			; Skip to the start of the Entries (offset 36)
+	sub eax, 36			; EAX holds the table size. Subtract the preamble
+	shr eax, 3			; Divide by 8
 	mov rdx, rax			; RDX is the entry count
 	xor ecx, ecx
 foundACPIv2_nextentry:
@@ -70,7 +69,7 @@ foundACPIv2_nextentry:
 	jne foundACPIv2_nextentry
 
 findAPICTable:
-	mov al, '3'			; Seacrh for the APIC table
+	mov al, '3'			; Search for the APIC table
 	mov [0x000B809C], al
 	mov al, '4'
 	mov [0x000B809E], al
