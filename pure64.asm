@@ -487,7 +487,9 @@ endmemcalc:
 	and cx, 0xFFFE		; Make sure it is an even number (in case we added 1 to an even number)
 	mov word [mem_amount], cx
 
-
+; Convert CPU speed value to string
+	xor rax, rax
+	mov ax, [cpu_speed]
 	mov rdi, speedtempstring
 	call os_int_to_string
 
