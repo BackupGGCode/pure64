@@ -195,7 +195,7 @@ speedtest:
 	pop rdx
 	sub rax, rdx
 	xor edx, edx
-	mov rcx, 20000
+	mov rcx, 10000
 	div rcx
 	mov [cpu_speed], ax
 
