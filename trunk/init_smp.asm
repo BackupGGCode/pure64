@@ -74,7 +74,7 @@ nextcore:
 	cmp al, 1		; Is it enabled?
 	jne skipcore
 
-;	push rax
+;	push rax		; Debug - display APIC ID
 ;	mov al, cl
 ;	add al, 48
 ;	call os_print_char
@@ -109,13 +109,13 @@ wait1:
 	cmp rax, rbx
 	jg wait1
 
-; Broadcast 'Startup' IPI to destination using vector 0x0A to specify entry-point is at the memory-address 0x0000A000
+; Broadcast 'Startup' IPI to destination using vector 0x09 to specify entry-point is at the memory-address 0x00009000
 	mov al, cl
 	shl eax, 24
 	mov rdi, [os_LocalAPICAddress]
 	add rdi, 0x310
 	stosd
-	mov eax, 0x0000460A		; Vector 0x0A
+	mov eax, 0x00004609		; Vector 0x09
 	mov rdi, [os_LocalAPICAddress]
 	add rdi, 0x300
 	stosd
