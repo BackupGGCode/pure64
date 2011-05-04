@@ -8,10 +8,10 @@
 ; jump to it!
 ;
 ; Bytes
-; 0    - 511   : 16-bit code (512 bytes)
-; 512  - 1023  : 32-bit code (512 bytes)
-; 1024 - 8191  : 64-bit code (7168 bytes)
-; 8192 - 10239 : AP code (2048 bytes)
+; 0    - 1023  : 16-bit code (1024 bytes)
+; 1024 - 1535  : 32-bit code (512 bytes)
+; 1536 - 8191  : 64-bit code (6656 bytes)
+; 8192 - 10239 : AP code (2048 bytes) - Aligned at 0xA000
 ;
 ; =============================================================================
 
@@ -112,8 +112,8 @@ dw 0xFFFF, 0x0000, 0x9A00, 0x00CF	; 32-bit code desciptor
 dw 0xFFFF, 0x0000, 0x9200, 0x008F	; 32-bit data desciptor
 gdt32_end:
 
-; Pad the first part of Pure64 to 512 bytes.
-times 512-($-$$) db 0x90
+; Pad the first part of Pure64 to 1024 bytes.
+times 1024-($-$$) db 0x90
 
 
 ; =============================================================================
@@ -242,8 +242,8 @@ pd_again:				; Create a 2 MiB page
 	jmp SYS64_CODE_SEL:start64	; Jump to 64-bit mode
 
 
-; Pad the second part of Pure64 to 1024 bytes.
-times 1024-($-$$) db 0x90
+; Pad the second part of Pure64 to 1536 bytes.
+times 1536-($-$$) db 0x90
 
 
 ; =============================================================================
