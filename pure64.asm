@@ -8,10 +8,9 @@
 ; jump to it!
 ;
 ; Bytes
-; 0    - 1023  : 16-bit code (1024 bytes)
-; 1024 - 1535  : 32-bit code (512 bytes)
-; 1536 - 8191  : 64-bit code (6656 bytes)
-; 8192 - 10239 : AP code (2048 bytes) - Aligned at 0xA000
+;    0 - 1023  : 16-bit/32-bit code (1024 bytes)
+; 1024 - 4095  : 64-bit code - Part 1(3072 bytes)
+; 4096 - 8191  : 64-bit code - AP code and Part 2(4096 bytes)
 ;
 ; =============================================================================
 
@@ -112,9 +111,9 @@ dw 0xFFFF, 0x0000, 0x9A00, 0x00CF	; 32-bit code desciptor
 dw 0xFFFF, 0x0000, 0x9200, 0x008F	; 32-bit data desciptor
 gdt32_end:
 
-; Pad the first part of Pure64 to 1024 bytes.
-times 1024-($-$$) db 0x90
-
+align 16
+db '32'
+align 16
 
 ; =============================================================================
 ; 32-bit mode
@@ -241,10 +240,12 @@ pd_again:				; Create a 2 MiB page
 
 	jmp SYS64_CODE_SEL:start64	; Jump to 64-bit mode
 
+align 16
+db '64'
+align 16
 
-; Pad the second part of Pure64 to 1536 bytes.
-times 1536-($-$$) db 0x90
-
+; Pad the second part of Pure64 to 1024 bytes.
+times 1024-($-$$) db 0x90
 
 ; =============================================================================
 ; 64-bit mode
@@ -578,7 +579,7 @@ nodefaultconfig:
 ; Unix - cat pure64.sys kernel64.sys > pure64.sys
 ; Max size of the resulting pure64.sys is 28672 bytes
 ; Uncomment the following 5 lines if you are chainloading
-;	mov rsi, 0x8000+10240	; Memory offset to end of pure64.sys
+;	mov rsi, 0x8000+8192	; Memory offset to end of pure64.sys
 ;	mov rdi, 0x100000	; Destination address at the 1MiB mark
 ;	mov rcx, 0x800		; For a 16KiB kernel (2048 x 8)
 ;	rep movsq		; Copy 8 bytes at a time
@@ -653,23 +654,23 @@ nokernel:
 	call os_print_string
 	jmp $
 
-%include "syscalls.asm"
 %include "init_cpu.asm"
 %include "init_hdd.asm"
-%include "fat16.asm"
 %include "init_smp.asm"
-%include "interrupt.asm"
-%include "sysvar.asm"
 
-; Pad the third part of Pure64 to 8192 bytes.
-times 8192-($-$$) db 0x90
-
-; AP init code is on a 4K boundry (0x0000A000)
+times 4096-($-$$) db 0x90
+; AP init code is on a 4K boundry (0x00009000)
 %include "init_smp_ap.asm"
 
-; Padding so we get an even KB file (10KB)
-times 10240-($-$$) db 0x90
+align 16
 
+%include "syscalls.asm"
+%include "interrupt.asm"
+%include "fat16.asm"
+%include "sysvar.asm"
+
+; Pad to an even KB file (8 KiB)
+times 8192-($-$$) db 0x90
 
 ; =============================================================================
 ; EOF
