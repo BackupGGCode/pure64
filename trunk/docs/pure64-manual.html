@@ -8,7 +8,7 @@
 
 <body>
 <div class="container">
-<h1><b>Pure64 v0.4.8-dev - Manual</b></h1>
+<h1><b>Pure64 v0.4.9 - Manual</b></h1>
 <p>
 Pure64 currently works with the FAT16 file system. This file system was chosen because it is the most compatible between other OS's (Windows, Mac, Linux, etc).<br />
 Pure64 loads your software (OS kernel, Demo, etc) to memory address 0x0000000000100000 (The start of the second megabyte of RAM). Once your software is loaded into memory Pure64 will start to run it. At this point Pure64 is done and your software is in full control of the computer.
@@ -30,7 +30,7 @@ This memory map shows how physical memory looks after Pure64 is finished.
 <tr><td>0x0000000000001000</td><td>0x0000000000001FFF</td><td>4 KiB</td><td>GDT - 256 descriptors (each descriptor is 16 bytes)</td></tr>
 <tr><td>0x0000000000002000</td><td>0x0000000000002FFF</td><td>4 KiB</td><td>PML4 - 512 entries, first entry points to PDP at 0x3000</td></tr>
 <tr><td>0x0000000000003000</td><td>0x0000000000003FFF</td><td>4 KiB</td><td>PDP - 512 enties</td></tr>
-<tr><td>0x0000000000004000</td><td>0x0000000000007FFF</td><td>16 KiB</td><td>Free</td></tr>
+<tr><td>0x0000000000004000</td><td>0x0000000000007FFF</td><td>16 KiB</td><td>Pure64 Data</td></tr>
 <tr><td>0x0000000000008000</td><td>0x000000000000FFFF</td><td>32 KiB</td><td>Pure64 - After the OS is loaded and running this memory is free again</td></tr>
 <tr><td>0x0000000000010000</td><td>0x000000000004FFFF</td><td>256 KiB</td><td>PD - Room to map 64 GiB</td></tr>
 <tr><td>0x0000000000050000</td><td>0x000000000009FFFF</td><td>320 KiB</td><td>Free</td></tr>
@@ -61,7 +61,11 @@ The Pure64 information table is located at 0x0000000000005000 and ends at 0x0000
 <tr><td>0x5030</td><td>8-bit</td><td>MBR</td><td>MBR Boot Flag. Set to 1 if the disk uses MBR, 0 if not</td></tr>
 <tr><td>0x5031 - 0x503F</td><td>&nbsp;</td><td>&nbsp;</td><td>For future use</td></tr>
 <tr><td>0x5040</td><td>64-bit</td><td>ACPITABLE</td><td>Root/Extended System Description Table Address</td></tr>
-<tr><td>0x5048 - 0x56FF</td><td>&nbsp;</td><td>&nbsp;</td><td>For future use</td></tr>
+<tr><td>0x5048 - 0x504F</td><td>&nbsp;</td><td>&nbsp;</td><td>For future use</td></tr>
+<tr><td>0x5050</td><td>32-bit</td><td>VIDEOBASE</td><td>Base memory address for video display, 0 if not configured</td></tr>
+<tr><td>0x5054</td><td>16-bit</td><td>VIDEOX</td><td>Video display width in Pixels</td></tr>
+<tr><td>0x5056</td><td>16-bit</td><td>VIDEOY</td><td>Video display height in Pixels</td></tr>
+<tr><td>0x5058 - 0x56FF</td><td>&nbsp;</td><td>&nbsp;</td><td>For future use</td></tr>
 <tr><td>0x5700</td><td>8-bit</td><td>CPUFLAG0</td><td>Flags for CPU with APIC ID 0</td></tr>
 <tr><td>0x5701</td><td>8-bit</td><td>CPUFLAG1</td><td>Flags for CPU with APIC ID 1</td></tr>
 <tr><td>0x5702</td><td>8-bit</td><td>CPUFLAG2</td><td>Flags for CPU with APIC ID 2</td></tr>
@@ -81,7 +85,8 @@ A copy of the E820 System Memory Map is stored at memory address 0x0000000000004
 <tr><td>Memory Type</td><td>32-bit</td><td>Type 1 is usable memory, Type 2 is not usable</td></tr>
 </table>
 For more information on the E820 Memory Map: <a href="http://wiki.osdev.org/Detecting_Memory_%28x86%29#BIOS_Function:_INT_0x15.2C_EAX_.3D_0xE820">OSDev wiki on E820</a><p />
-
+<p />
+A copy of the VESA SuperVGA Mode Information is stored at memory address 0x0000000000005C00. A description of what is stored in the structure is available <a href="http://www.ctyme.com/intr/rb-0274.htm">here</a>.<p />
 <h2>Limitations:</h2>
 Pure64 only works with a FAT16 filesystem. This filesystem was chosen because it is the most compatible (Windows, Mac, and Linux support it).<p />
 Pure64 will only look for and load a file named "kernel64.sys". A future version will allow this to be changed.<p />
