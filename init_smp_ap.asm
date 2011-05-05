@@ -8,20 +8,7 @@
 USE16
 
 mp_ap_setup:
-	cli				; Interupts are disabled until the end
-	xor eax, eax
-	xor ebx, ebx
-	xor ecx, ecx
-	xor edx, edx
-	xor esi, esi
-	xor edi, edi
-	xor ebp, ebp
-	mov ds, ax
-	mov es, ax
-	mov ss, ax
-	mov fs, ax
-	mov gs, ax
-	mov esp, 0x8000			; Set a known free location for the stack
+	nop
 	jmp 0x0000:clearcs_ap
 	
 clearcs_ap:

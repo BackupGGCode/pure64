@@ -6,19 +6,12 @@
 ; in 16-bit mode (BIOS is still accessable), setup a minimal 64-bit
 ; enviroment, load the 64-bit kernel from the filesystem into memory and
 ; jump to it!
-;
-; Bytes
-;    0 - 1023  : 16-bit/32-bit code (1024 bytes)
-; 1024 - 4095  : 64-bit code - Part 1(3072 bytes)
-; 4096 - 8191  : 64-bit code - AP code and Part 2(4096 bytes)
-;
 ; =============================================================================
 
 
 USE16
 ORG 0x00008000
-
-start16:
+start:
 	cli				; Disable all interrupts
 	xor eax, eax
 	xor ebx, ebx
@@ -33,10 +26,21 @@ start16:
 	mov fs, ax
 	mov gs, ax
 	mov esp, 0x8000			; Set a known free location for the stack
+
+align 16
+	jmp start16			; This command will be overwritten with 'NOP's before the AP's are started
+
+%include "init_smp_ap.asm"		; Our AP code is at 0x8000
+
+align 16
+db '16'
+align 16
+
+USE16
+start16:
 	jmp 0x0000:clearcs
 	
 clearcs:
-
 	mov ax, [0x07FE]		; MBR sector is copied to 0x0600
 	cmp ax, 0xAA55			; Check if the word at 0x07FE is set to 0xAA55 (Boot sector marker)
 	jne no_mbr
@@ -114,6 +118,7 @@ gdt32_end:
 align 16
 db '32'
 align 16
+
 
 ; =============================================================================
 ; 32-bit mode
@@ -244,8 +249,6 @@ align 16
 db '64'
 align 16
 
-; Pad the second part of Pure64 to 1024 bytes.
-times 1024-($-$$) db 0x90
 
 ; =============================================================================
 ; 64-bit mode
@@ -298,6 +301,11 @@ clearcs64:
 	mov [0x000B809C], al
 	mov al, '2'
 	mov [0x000B809E], al
+
+; Patch Pure64 AP code			; The AP's will be told to start execution at 0x8000
+	mov edi, 0x00008030		; We need to remove the BSP Jump call to get the AP's
+	mov eax, 0x90909090		; to fall through to the AP Init code
+	stosd
 
 ; Build the rest of the page tables (4GiB+)
 	mov rcx, 0x0000000000000000
@@ -657,20 +665,13 @@ nokernel:
 %include "init_cpu.asm"
 %include "init_hdd.asm"
 %include "init_smp.asm"
-
-times 4096-($-$$) db 0x90
-; AP init code is on a 4K boundry (0x00009000)
-%include "init_smp_ap.asm"
-
-align 16
-
 %include "syscalls.asm"
 %include "interrupt.asm"
 %include "fat16.asm"
 %include "sysvar.asm"
 
 ; Pad to an even KB file (8 KiB)
-times 8192-($-$$) db 0x90
+;times 8192-($-$$) db 0x90
 
 ; =============================================================================
 ; EOF
