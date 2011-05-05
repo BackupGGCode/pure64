@@ -541,6 +541,14 @@ endmemcalc:
 	mov rax, [os_ACPITableAddress]
 	stosq
 
+	mov rdi, 0x0000000000005050
+	mov eax, [VBEModeInfoBlock.PhysBasePtr]
+	stosd
+	mov ax, [VBEModeInfoBlock.XResolution]
+	stosw
+	mov ax, [VBEModeInfoBlock.YResolution]
+	stosw
+
 ; Initialization is now complete... write a message to the screen
 	mov rsi, msg_done
 	call os_print_string
