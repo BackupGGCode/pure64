@@ -109,13 +109,13 @@ wait1:
 	cmp rax, rbx
 	jg wait1
 
-; Broadcast 'Startup' IPI to destination using vector 0x09 to specify entry-point is at the memory-address 0x00009000
+; Broadcast 'Startup' IPI to destination using vector 0x08 to specify entry-point is at the memory-address 0x00008000
 	mov al, cl
 	shl eax, 24
 	mov rdi, [os_LocalAPICAddress]
 	add rdi, 0x310
 	stosd
-	mov eax, 0x00004609		; Vector 0x09
+	mov eax, 0x00004608		; Vector 0x08
 	mov rdi, [os_LocalAPICAddress]
 	add rdi, 0x300
 	stosd
