@@ -87,9 +87,5 @@ A copy of the E820 System Memory Map is stored at memory address 0x0000000000004
 For more information on the E820 Memory Map: <a href="http://wiki.osdev.org/Detecting_Memory_%28x86%29#BIOS_Function:_INT_0x15.2C_EAX_.3D_0xE820">OSDev wiki on E820</a><p />
 <p />
 A copy of the VESA SuperVGA Mode Information is stored at memory address 0x0000000000005C00. A description of what is stored in the structure is available <a href="http://www.ctyme.com/intr/rb-0274.htm">here</a>.<p />
-<h2>Limitations:</h2>
-Pure64 only works with a FAT16 filesystem. This filesystem was chosen because it is the most compatible (Windows, Mac, and Linux support it).<p />
-Pure64 will only look for and load a file named "kernel64.sys". A future version will allow this to be changed.<p />
-Pure64 keeps the computer screen in text mode (80x25). A future version will allow this to be configurable and also give the user the ability to switch to a VESA mode.<p />
 </div>
 </body></html>
