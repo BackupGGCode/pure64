@@ -587,7 +587,7 @@ nodefaultconfig:
 ; Unix - cat pure64.sys kernel64.sys > pure64.sys
 ; Max size of the resulting pure64.sys is 28672 bytes
 ; Uncomment the following 5 lines if you are chainloading
-;	mov rsi, 0x8000+8192	; Memory offset to end of pure64.sys
+;	mov rsi, 0x8000+6144	; Memory offset to end of pure64.sys
 ;	mov rdi, 0x100000	; Destination address at the 1MiB mark
 ;	mov rcx, 0x800		; For a 16KiB kernel (2048 x 8)
 ;	rep movsq		; Copy 8 bytes at a time
