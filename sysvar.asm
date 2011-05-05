@@ -6,31 +6,56 @@
 ; =============================================================================
 
 
-;CPU
-cpu_speed:		dw 0x0000	; MHz 
-cpu_activated:		dw 0x0000	; Number of CPU cores activated
-cpu_detected:		dw 0x0000	; Number of CPU cores detected
+E820Map:		equ 0x0000000000004000
+InfoMap:		equ 0x0000000000005000
+SystemVariables:	equ 0x0000000000005A00
+VBEModeInfoBlock	equ 0x0000000000005C00
+hdbuffer:		equ 0x0000000000070000	; 32768 bytes = 0x6000 -> 0xDFFF VERIFY THIS!!!
+hdbuffer1:		equ 0x000000000007E000	; 512 bytes = 0xE000 -> 0xE1FF VERIFY THIS!!!
 
-;MEM
-mem_amount:		dw 0x0000	; MB
 
-;HDD
-hd1_enable:		db 0x00			; 1 if the drive is there and enabled
-hd1_lba48:		db 0x00			; 1 if LBA48 is allowed
-hd1_size:		dd 0x00000000		; size in MiB
-hd1_maxlba:		dq 0x0000000000000000	; we need at least a 64-bit value since at most it will hold a 48-bit value
-hdtempstring:		times 8 db 0
+; DQ - Starting at offset 0, increments by 0x8
+os_LocalAPICAddress:	equ SystemVariables + 0x00
+os_IOAPICAddress:	equ SystemVariables + 0x08
+os_ACPITableAddress:	equ SystemVariables + 0x10
+screen_cursor_offset:	equ SystemVariables + 0x18
+hd1_maxlba:		equ SystemVariables + 0x20
+os_Counter:		equ SystemVariables + 0x28
+
+; DD - Starting at offset 128, increments by 4
+hd1_size:		equ SystemVariables + 128
+fat16_FatStart:		equ SystemVariables + 132
+fat16_TotalSectors:	equ SystemVariables + 136
+fat16_DataStart:	equ SystemVariables + 140
+fat16_RootStart:	equ SystemVariables + 144
+fat16_PartitionOffset:	equ SystemVariables + 148
+
+; DW - Starting at offset 256, increments by 2
+cpu_speed:		equ SystemVariables + 256
+cpu_activated:		equ SystemVariables + 258
+cpu_detected:		equ SystemVariables + 260
+mem_amount:		equ SystemVariables + 262
+fat16_BytesPerSector:	equ SystemVariables + 264
+fat16_ReservedSectors:	equ SystemVariables + 266
+fat16_SectorsPerFat:	equ SystemVariables + 268
+fat16_RootDirEnts:	equ SystemVariables + 270
+
+; DB - Starting at offset 384, increments by 1
+hd1_enable:		equ SystemVariables + 384
+hd1_lba48:		equ SystemVariables + 385
+screen_cursor_x:	equ SystemVariables + 386
+screen_cursor_y:	equ SystemVariables + 387
+fat16_SectorsPerCluster:	equ SystemVariables + 388
+fat16_Fats:		equ SystemVariables + 389
+memtempstring:		equ SystemVariables + 390
+speedtempstring:	equ SystemVariables + 400
+cpu_amount_string:	equ SystemVariables + 410
+hdtempstring:		equ SystemVariables + 420
 
 ;MISC
 screen_cols:		db 80
 screen_rows:		db 25
 hextable: 		db '0123456789ABCDEF'
-screen_cursor_x:	db 0x00
-screen_cursor_y:	db 0x00
-screen_cursor_offset:	dq 0x0000000000000000
-hdbuffer:		equ 0x0000000000070000	; 32768 bytes = 0x6000 -> 0xDFFF VERIFY THIS!!!
-hdbuffer1:		equ 0x000000000007E000	; 512 bytes = 0xE000 -> 0xE1FF VERIFY THIS!!!
-os_Counter:		equ 0x000000000000F900
 
 ;CONFIG
 cfg_smpinit:		db 1	; By default SMP is enabled. Set to 0 to disable.
@@ -40,9 +65,6 @@ cfg_e820:		db 1	; By default E820 should be present. Pure64 will set this to 0 i
 cfg_mbr:		db 0	; Did we boot off of a disk with a proper MBR
 
 ;STRINGS
-memtempstring:		times 6 db 0	; Max is "99999"
-speedtempstring:	times 5 db 0	; Max is "9999"
-cpu_amount_string:	times 4 db 0	; Max is "999"
 kernelerror:		db 'FATAL ERROR: Software not found.', 0
 kernelname:		db 'KERNEL64SYS', 0
 configname:		db 'PURE64  CFG', 0
@@ -57,84 +79,58 @@ msg_startingkernel:	db 'Starting software.', 0
 msg_noconfig:		db '(default config)', 0
 no64msg:		db 'FATAL ERROR: CPU does not support 64-bit mode. Please run on supported hardware.', 0
 initStartupMsg:		db 'Pure64 v0.4.9-dev - http://www.returninfinity.com', 13, 10, 13, 10, 'Initializing system...', 0
-msg_date:		db '2011/04/04', 0
+msg_date:		db '2011/04/05', 0
 
-; Multi-processor variables
-os_LocalAPICAddress:		dq 0x0000000000000000	; Default adddres for LAPIC
-os_IOAPICAddress:		dq 0x0000000000000000	; Default address for IOAPIC
 
-; Misc
-os_ACPITableAddress:		dq 0x0000000000000000
-
-; HDD variables
-fat16_BytesPerSector:		dw 0x0000
-fat16_SectorsPerCluster:	db 0x00
-fat16_ReservedSectors:		dw 0x0000
-fat16_FatStart:			dd 0x00000000
-fat16_Fats:			db 0x00
-fat16_SectorsPerFat:		dw 0x0000
-fat16_TotalSectors:		dd 0x00000000
-fat16_RootDirEnts:		dw 0x0000
-fat16_DataStart:		dd 0x00000000
-fat16_RootStart:		dd 0x00000000
-fat16_PartitionOffset:		dd 0x00000000
-
-VBEModeInfoBlock:
-
-	; Mandatory information for all VBE revisions
-	.ModeAttributes		dw 0	; mode attributes
-	.WinAAttributes		db 0	; window A attributes
-	.WinBAttributes		db 0	; window B attributes
-	.WinGranularity		dw 0	; window granularity in KB
-	.WinSize		dw 0	; window size in KB
-	.WinASegment		dw 0	; window A start segment
-	.WinBSegment		dw 0	; window B start segment
-	.WinFuncPtr		dd 0	; real mode pointer to window function
-	.BytesPerScanLine	dw 0	; bytes per scan line
-
-	; Mandatory information for VBE 1.2 and above
-	.XResolution		dw 0	; horizontal resolution in pixels or characters
-	.YResolution		dw 0	; vertical resolution in pixels or characters
-	.XCharSize		db 0	; character cell width in pixels
-	.YCharSize		db 0	; character cell height in pixels
-	.NumberOfPlanes		db 0	; number of memory planes
-	.BitsPerPixel		db 0	; bits per pixel
-	.NumberOfBanks		db 0	; number of banks
-	.MemoryModel		db 0	; memory model type
-	.BankSize		db 0	; bank size in KB
-	.NumberOfImagePages	db 0	; number of image pages
-	.Reserved		db 1	; reserved (0x00 for VBE 1.0-2.0, 0x01 for VBE 3.0)
-
-	; Direct Color fields (required for direct/6 and YUV/7 memory models)
-	.RedMaskSize		db 0	; size of direct color red mask in bits
-	.RedFieldPosition	db 0	; bit position of lsb of red mask
-	.GreenMaskSize		db 0	; size of direct color green mask in bits
-	.GreenFieldPosition	db 0	; bit position of lsb of green mask
-	.BlueMaskSize		db 0	; size of direct color blue mask in bits
-	.BlueFieldPosition	db 0	; bit position of lsb of blue mask
-	.RsvdMaskSize		db 0	; size of direct color reserved mask in bits
-	.RsvdFieldPosition	db 0	; bit position of lsb of reserved mask
-	.DirectColorModeInfo	db 0	; direct color mode attributes
-
-	; Mandatory information for VBE 2.0 and above
-	.PhysBasePtr		dd 0	; physical address for flat memory frame buffer
-	.Reserved1		dd 0	; Reserved - always set to 0
-	.Reserved2		dw 0	; Reserved - always set to 0
-
-	; Mandatory information for VBE 3.0 and above
-	.LinBytesPerScanLine	dw 0	; bytes per scan line for linear modes
-	.BnkNumberOfImagePages	db 0	; number of images for banked modes
-	.LinNumberOfImagePages	db 0	; number of images for linear modes
-	.LinRedMaskSize		db 0	; size of direct color red mask (linear modes)
-	.LinRedFieldPosition	db 0	; bit position of lsb of red mask (linear modes)
-	.LinGreenMaskSize	db 0	; size of direct color green mask  (linear modes)
-	.LinGreenFieldPosition	db 0	; bit position of lsb of green mask (linear modes)
-	.LinBlueMaskSize	db 0	; size of direct color blue mask  (linear modes)
-	.LinBlueFieldPosition	db 0	; bit position of lsb of blue mask (linear modes)
-	.LinRsvdMaskSize	db 0	; size of direct color reserved mask (linear modes)
-	.LinRsvdFieldPosition	db 0	; bit position of lsb of reserved mask (linear modes)
-	.MaxPixelClock		dd 0	; maximum pixel clock (in Hz) for graphics mode
-	.Reserved3		times 190 db 0	; remainder of VBEModeInfoBlock
+; Mandatory information for all VBE revisions
+VBEModeInfoBlock.ModeAttributes		equ VBEModeInfoBlock + 0	; DW - mode attributes
+VBEModeInfoBlock.WinAAttributes		equ VBEModeInfoBlock + 2	; DB - window A attributes
+VBEModeInfoBlock.WinBAttributes		equ VBEModeInfoBlock + 3	; DB - window B attributes
+VBEModeInfoBlock.WinGranularity		equ VBEModeInfoBlock + 4	; DW - window granularity in KB
+VBEModeInfoBlock.WinSize		equ VBEModeInfoBlock + 6	; DW - window size in KB
+VBEModeInfoBlock.WinASegment		equ VBEModeInfoBlock + 8	; DW - window A start segment
+VBEModeInfoBlock.WinBSegment		equ VBEModeInfoBlock + 10	; DW - window B start segment
+VBEModeInfoBlock.WinFuncPtr		equ VBEModeInfoBlock + 12	; DD - real mode pointer to window function
+VBEModeInfoBlock.BytesPerScanLine	equ VBEModeInfoBlock + 16	; DW - bytes per scan line
+; Mandatory information for VBE 1.2 and above
+VBEModeInfoBlock.XResolution		equ VBEModeInfoBlock + 18	; DW - horizontal resolution in pixels or characters
+VBEModeInfoBlock.YResolution		equ VBEModeInfoBlock + 20	; DW - vertical resolution in pixels or characters
+VBEModeInfoBlock.XCharSize		equ VBEModeInfoBlock + 22	; DB - character cell width in pixels
+VBEModeInfoBlock.YCharSize		equ VBEModeInfoBlock + 23	; DB - character cell height in pixels
+VBEModeInfoBlock.NumberOfPlanes		equ VBEModeInfoBlock + 24	; DB - number of memory planes
+VBEModeInfoBlock.BitsPerPixel		equ VBEModeInfoBlock + 25	; DB - bits per pixel
+VBEModeInfoBlock.NumberOfBanks		equ VBEModeInfoBlock + 26	; DB - number of banks
+VBEModeInfoBlock.MemoryModel		equ VBEModeInfoBlock + 27	; DB - memory model type
+VBEModeInfoBlock.BankSize		equ VBEModeInfoBlock + 28	; DB - bank size in KB
+VBEModeInfoBlock.NumberOfImagePages	equ VBEModeInfoBlock + 29	; DB - number of image pages
+VBEModeInfoBlock.Reserved		equ VBEModeInfoBlock + 30	; DB - reserved (0x00 for VBE 1.0-2.0, 0x01 for VBE 3.0)
+; Direct Color fields (required for direct/6 and YUV/7 memory models)
+VBEModeInfoBlock.RedMaskSize		equ VBEModeInfoBlock + 31	; DB - size of direct color red mask in bits
+VBEModeInfoBlock.RedFieldPosition	equ VBEModeInfoBlock + 32	; DB - bit position of lsb of red mask
+VBEModeInfoBlock.GreenMaskSize		equ VBEModeInfoBlock + 33	; DB - size of direct color green mask in bits
+VBEModeInfoBlock.GreenFieldPosition	equ VBEModeInfoBlock + 34	; DB - bit position of lsb of green mask
+VBEModeInfoBlock.BlueMaskSize		equ VBEModeInfoBlock + 35	; DB - size of direct color blue mask in bits
+VBEModeInfoBlock.BlueFieldPosition	equ VBEModeInfoBlock + 36	; DB - bit position of lsb of blue mask
+VBEModeInfoBlock.RsvdMaskSize		equ VBEModeInfoBlock + 37	; DB - size of direct color reserved mask in bits
+VBEModeInfoBlock.RsvdFieldPosition	equ VBEModeInfoBlock + 38	; DB - bit position of lsb of reserved mask
+VBEModeInfoBlock.DirectColorModeInfo	equ VBEModeInfoBlock + 39	; DB - direct color mode attributes
+; Mandatory information for VBE 2.0 and above
+VBEModeInfoBlock.PhysBasePtr		equ VBEModeInfoBlock + 40	; DD - physical address for flat memory frame buffer
+VBEModeInfoBlock.Reserved1		equ VBEModeInfoBlock + 44	; DD - Reserved - always set to 0
+VBEModeInfoBlock.Reserved2		equ VBEModeInfoBlock + 48	; DD - Reserved - always set to 0
+; Mandatory information for VBE 3.0 and above
+;VBEModeInfoBlock.LinBytesPerScanLine	dw 0	; bytes per scan line for linear modes
+;VBEModeInfoBlock.BnkNumberOfImagePages	db 0	; number of images for banked modes
+;VBEModeInfoBlock.LinNumberOfImagePages	db 0	; number of images for linear modes
+;VBEModeInfoBlock.LinRedMaskSize	db 0	; size of direct color red mask (linear modes)
+;VBEModeInfoBlock.LinRedFieldPosition	db 0	; bit position of lsb of red mask (linear modes)
+;VBEModeInfoBlock.LinGreenMaskSize	db 0	; size of direct color green mask  (linear modes)
+;VBEModeInfoBlock.LinGreenFieldPosition	db 0	; bit position of lsb of green mask (linear modes)
+;VBEModeInfoBlock.LinBlueMaskSize	db 0	; size of direct color blue mask  (linear modes)
+;VBEModeInfoBlock.LinBlueFieldPosition	db 0	; bit position of lsb of blue mask (linear modes)
+;VBEModeInfoBlock.LinRsvdMaskSize	db 0	; size of direct color reserved mask (linear modes)
+;VBEModeInfoBlock.LinRsvdFieldPosition	db 0	; bit position of lsb of reserved mask (linear modes)
+;VBEModeInfoBlock.MaxPixelClock		dd 0	; maximum pixel clock (in Hz) for graphics mode
 
 
 ; -----------------------------------------------------------------------------
