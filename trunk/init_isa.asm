@@ -8,6 +8,11 @@
 
 isa_setup:
 
+	mov edi, 0x00004000
+	xor eax, eax
+	mov ecx, 2048
+	rep stosd
+
 ; Get the BIOS E820 Memory Map
 ; use the INT 0x15, eax= 0xE820 BIOS function to get a memory map
 ; inputs: es:di -> destination buffer for 24 byte entries

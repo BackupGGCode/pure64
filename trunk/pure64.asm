@@ -670,8 +670,8 @@ nokernel:
 %include "fat16.asm"
 %include "sysvar.asm"
 
-; Pad to an even KB file (8 KiB)
-;times 8192-($-$$) db 0x90
+; Pad to an even KB file (6 KiB)
+times 6144-($-$$) db 0x90
 
 ; =============================================================================
 ; EOF
