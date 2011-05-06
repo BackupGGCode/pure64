@@ -6,13 +6,20 @@
 ; =============================================================================
 
 
+;CONFIG
+cfg_smpinit:		db 1	; By default SMP is enabled. Set to 0 to disable.
+cfg_vesa:		db 1	; By default VESA is disabled. Set to 1 to enable.
+cfg_default:		db 0	; By default we don't need a config file so set to 0. If a config file is found set to 1.
+cfg_e820:		db 1	; By default E820 should be present. Pure64 will set this to 0 if not found/usable.
+cfg_mbr:		db 0	; Did we boot off of a disk with a proper MBR
+
+; Memory locations
 E820Map:		equ 0x0000000000004000
 InfoMap:		equ 0x0000000000005000
 SystemVariables:	equ 0x0000000000005A00
 VBEModeInfoBlock	equ 0x0000000000005C00
 hdbuffer:		equ 0x0000000000070000	; 32768 bytes = 0x6000 -> 0xDFFF VERIFY THIS!!!
 hdbuffer1:		equ 0x000000000007E000	; 512 bytes = 0xE000 -> 0xE1FF VERIFY THIS!!!
-
 
 ; DQ - Starting at offset 0, increments by 0x8
 os_LocalAPICAddress:	equ SystemVariables + 0x00
@@ -56,13 +63,6 @@ hdtempstring:		equ SystemVariables + 420
 screen_cols:		db 80
 screen_rows:		db 25
 hextable: 		db '0123456789ABCDEF'
-
-;CONFIG
-cfg_smpinit:		db 1	; By default SMP is enabled. Set to 0 to disable.
-cfg_vesa:		db 0	; By default VESA is disabled. Set to 1 to enable.
-cfg_default:		db 0	; By default we don't need a config file so set to 0. If a config file is found set to 1.
-cfg_e820:		db 1	; By default E820 should be present. Pure64 will set this to 0 if not found/usable.
-cfg_mbr:		db 0	; Did we boot off of a disk with a proper MBR
 
 ;STRINGS
 kernelerror:		db 'FATAL ERROR: Software not found.', 0
