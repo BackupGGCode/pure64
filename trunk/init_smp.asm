@@ -67,6 +67,11 @@ makempgonow:
 	mov rsi, 0x0000000000005800
 	xor eax, eax
 
+	mov al, '3'		; Start the AP's
+	mov [0x000B809C], al
+	mov al, '8'
+	mov [0x000B809E], al
+
 nextcore:
 	cmp rsi, 0x0000000000005900
 	je done
@@ -74,11 +79,11 @@ nextcore:
 	cmp al, 1		; Is it enabled?
 	jne skipcore
 
-;	push rax		; Debug - display APIC ID
-;	mov al, cl
-;	add al, 48
-;	call os_print_char
-;	pop rax
+	push rax		; Debug - display APIC ID
+	mov al, cl
+	add al, 48
+	call os_print_char
+	pop rax
 
 	cmp cl, dl		; Is it the BSP?
 	je skipcore
@@ -143,7 +148,7 @@ done:
 
 	mov al, '3'
 	mov [0x000B809C], al
-	mov al, '8'
+	mov al, 'A'
 	mov [0x000B809E], al
 
 ; Let things settle (Give the AP's some time to finish)
@@ -175,7 +180,7 @@ noMP:
 
 	mov al, '3'
 	mov [0x000B809C], al
-	mov al, 'A'
+	mov al, 'C'
 	mov [0x000B809E], al
 
 ; Calculate speed of CPU (At this point the timer is firing at 1000Hz)
@@ -201,7 +206,7 @@ speedtest:
 
 	mov al, '3'
 	mov [0x000B809C], al
-	mov al, 'C'
+	mov al, 'E'
 	mov [0x000B809E], al
 
 	cli				; Disable the timer
