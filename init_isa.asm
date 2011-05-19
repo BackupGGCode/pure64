@@ -158,6 +158,8 @@ check_A20:
 
 VBEfail:
 	mov byte [cfg_vesa], 0		; Clear the VESA config as it was not sucessful
+	mov al, 'B'
+	call serial_send_16
 
 VBEdone:
 
