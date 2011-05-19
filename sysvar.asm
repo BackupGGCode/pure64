@@ -65,15 +65,16 @@ screen_rows:		db 25
 hextable: 		db '0123456789ABCDEF'
 
 ;STRINGS
+pure64:			db 'Pure64 - ', 0
 kernelerror:		db 'ERROR: Software not found.', 0
 kernelname:		db 'KERNEL64SYS', 0
 configname:		db 'PURE64  CFG', 0
 msg_done:		db ' Done', 0
 msg_CPU:		db '[CPU: ', 0
-msg_MEM:		db ']  [MEM: ', 0
-msg_HDD:		db '  [HDD: ', 0
-msg_mb:			db ' MiB]', 0
 msg_mhz:		db 'MHz x', 0
+msg_MEM:		db ']  [MEM: ', 0
+msg_mb:			db ' MiB]', 0
+msg_HDD:		db '  [HDD: ', 0
 msg_loadingkernel:	db 'Loading software...', 0
 msg_startingkernel:	db 'Starting software.', 0
 msg_noconfig:		db '(default config)', 0

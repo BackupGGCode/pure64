@@ -51,8 +51,14 @@ no_mbr:
 	xor dx, dx			; First serial port
 	mov ax, 0000000011100011b	; 9600 baud, no parity, 1 stop bit, 8 data bits
 	int 0x14
-	mov al, 'P'
+	mov si, pure64
+banner:
+	lodsb
+	cmp al, 0x00
+	je bannerdone
 	call serial_send_16
+	jmp banner
+bannerdone:
 
 ; Make sure the screen is set to 80x25 color text mode
 	mov ax, 0x0003			; Set to normal (80x25 text) video mode
@@ -461,7 +467,6 @@ make_interrupt_gates: 			; make gates for the other interrupts
 	mov [0x000B809C], al
 	mov al, '4'
 	mov [0x000B809E], al
-
 	mov al, '5'
 	call serial_send_32
 
@@ -482,7 +487,6 @@ clearmapnext:
 	mov [0x000B809C], al
 	mov al, '6'
 	mov [0x000B809E], al
-
 	mov al, '6'
 	call serial_send_32
 
@@ -500,7 +504,6 @@ clearmapnext:
 	mov [0x000B809C], al
 	mov al, '8'
 	mov [0x000B809E], al
-
 	mov al, '8'
 	call serial_send_32
 
@@ -539,7 +542,6 @@ clearmapnext:
 	mov [0x000B809C], al
 	mov al, 'E'
 	mov [0x000B809E], al
-
 	mov al, 'E'
 	call serial_send_32
 
@@ -674,7 +676,7 @@ nodefaultconfig:
 ; Unix - cat pure64.sys kernel64.sys > pure64.sys
 ; Max size of the resulting pure64.sys is 28672 bytes
 ; Uncomment the following 5 lines if you are chainloading
-;	mov rsi, 0x8000+6144	; Memory offset to end of pure64.sys
+;	mov rsi, 0x8000+7168	; Memory offset to end of pure64.sys
 ;	mov rdi, 0x100000	; Destination address at the 1MiB mark
 ;	mov rcx, 0x800		; For a 16KiB kernel (2048 x 8)
 ;	rep movsq		; Copy 8 bytes at a time
@@ -776,7 +778,7 @@ nokernel:
 %include "sysvar.asm"
 
 ; Pad to an even KB file (6 KiB)
-times 6144-($-$$) db 0x90
+times 7168-($-$$) db 0x90
 
 ; =============================================================================
 ; EOF
