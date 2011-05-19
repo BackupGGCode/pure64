@@ -79,12 +79,6 @@ check_A20:
 	mov al, 0xDF
 	out 0x60, al
 
-; Configure serial port 1
-	mov dx, 0
-	mov al, 11100011b		; 9600 baud, no parity, 8 data bits, 1 stop bit
-	mov ah, 0
-	int 14h
-
 ; Set PIT Channel 0 to fire at 1000Hz (Divisor = 1193180 / hz)
 	mov al, 0x36			; Set Timer
 	out 0x43, al
