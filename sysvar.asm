@@ -65,7 +65,7 @@ screen_rows:		db 25
 hextable: 		db '0123456789ABCDEF'
 
 ;STRINGS
-kernelerror:		db 'FATAL ERROR: Software not found.', 0
+kernelerror:		db 'ERROR: Software not found.', 0
 kernelname:		db 'KERNEL64SYS', 0
 configname:		db 'PURE64  CFG', 0
 msg_done:		db ' Done', 0
@@ -77,7 +77,7 @@ msg_mhz:		db 'MHz x', 0
 msg_loadingkernel:	db 'Loading software...', 0
 msg_startingkernel:	db 'Starting software.', 0
 msg_noconfig:		db '(default config)', 0
-no64msg:		db 'FATAL ERROR: CPU does not support 64-bit mode. Please run on supported hardware.', 0
+no64msg:		db 'ERROR: CPU does not support 64-bit mode.', 0
 initStartupMsg:		db 'Pure64 v0.5.0-dev - http://www.returninfinity.com', 13, 10, 13, 10, 'Initializing system...', 0
 msg_date:		db '2011/05/19', 0
 
@@ -139,7 +139,6 @@ GDTR64:					; Global Descriptors Table Register
 	dw gdt64_end - gdt64 - 1	; limit of GDT (size minus one)
 	dq 0x0000000000001000		; linear address of GDT
 
-align 16
 gdt64:					; This structure is copied to 0x0000000000001000
 SYS64_NULL_SEL equ $-gdt64		; Null Segment
 	dq 0x0000000000000000
@@ -149,7 +148,6 @@ SYS64_DATA_SEL equ $-gdt64		; Data segment, read/write, expand down
 	dq 0x0000900000000000		; 0x0020920000000000
 gdt64_end:
 
-align 16
 IDTR64:					; Interrupt Descriptor Table Register
 	dw 256*16-1			; limit of IDT (size minus one) (4096 bytes - 1)
 	dq 0x0000000000000000		; linear address of IDT
