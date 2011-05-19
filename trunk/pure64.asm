@@ -47,14 +47,21 @@ clearcs:
 	mov byte [cfg_mbr], 1		; Set for booting from a disk with a MBR
 no_mbr:
 
+; Configure serial port
+	mov dx, 0			; First serial port
+	mov ax, 0000000011100011b	; 9600 baud, no parity, 1 stop bit, 8 data bits
+	int 0x14
+	mov al, 'P'
+	call serial_send_16
+
 ; Make sure the screen is set to 80x25 color text mode
 	mov ax, 0x0003			; Set to normal (80x25 text) video mode
 	int 0x10
 
 ; Hide the cursor
-;	mov ax, 0x0100
-;	mov cx, 0x200F
-;	int 0x10
+	mov ax, 0x0100
+	mov cx, 0x200F
+	int 0x10
 
 ; Print message
 	mov si, initStartupMsg
@@ -85,15 +92,34 @@ no_mbr:
 print_string_16:			; Output string in SI to screen
 	pusha
 	mov ah, 0x0E			; int 0x10 teletype function
-.repeat:
+print_string_16_repeat:
 	lodsb				; Get char from string
 	cmp al, 0
-	je .done			; If char is zero, end of string
+	je print_string_16_done		; If char is zero, end of string
 	int 0x10			; Otherwise, print it
-	jmp short .repeat
-.done:
+	jmp print_string_16_repeat
+print_string_16_done:
 	popa
 	ret
+
+; -----------------------------------------------------------------------------
+; os_serial_send -- Send a byte over the primary serial port
+; IN:	AL  = Byte to send over serial port
+; OUT:	All registers preserved
+serial_send_16:
+	push dx
+	push ax			; Save AX since the serial line status check clobbers AL
+	mov dx, 0x03FD		; Serial Line Status register
+serial_send_16_wait:
+	in al, dx
+	bt ax, 5		; Copy bit 5 (THR is empty) to the Carry Flag
+	jnc serial_send_16_wait	; If the bit is not set then the queue isn't ready for another byte
+	pop ax			; Get the byte back from the stack
+	mov dx, 0x03F8		; Serial data register
+	out dx, al		; Send the byte
+	pop dx
+	ret
+; -----------------------------------------------------------------------------
 
 ; Display an error message that the CPU does not support 64-bit mode
 no_long_mode:
