@@ -127,6 +127,13 @@ exception_gate_main:
 	mul bl				; AX = AL x BL
 	add rsi, rax			; Use the value in RAX as an offset to get to the right message
 	call os_print_string
+	mov rsi, adr_string
+	call os_print_string
+	mov rax, [rsp]
+	mov rdi, os_dump_reg_tstring
+	call os_int_to_hex_string		; Convert the register value to a hex string
+	mov rsi, os_dump_reg_tstring
+	call os_print_string			; Print the hex string
 	call os_print_newline
 	call os_dump_regs
 
@@ -135,8 +142,9 @@ exception_gate_main_hang:
 	jmp exception_gate_main_hang	; Hang. User must reset machine at this point
 
 ; Strings for the error messages
-int_string db 'Pure64 - Interrupt ', 0
-exc_string db '?? - Unknown Fatal Exception!', 0
+int_string db 'Pure64 - Exception ', 0
+adr_string db ' @ 0x', 0
+exc_string db '?? - Unknown', 0
 align 16
 exc_string00 db '00 - DE', 0
 exc_string01 db '01 - DB', 0
