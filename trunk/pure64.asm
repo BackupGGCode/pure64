@@ -118,12 +118,18 @@ print_string_16_done:
 	ret
 
 ; 16-bit function to send a char our via serial
-serial_send_16:				; Out byte in AL to serial port
-	pusha
-	mov ah, 0x01
-	xor dx, dx
-	int 0x14
-	popa
+serial_send_16:
+	push edx
+	push eax			; Save EAX since the serial line status check clobbers AL
+	mov dx, 0x03FD			; Serial Line Status register
+serial_send_wait_16:
+	in al, dx
+	bt ax, 5			; Copy bit 5 (THR is empty) to the Carry Flag
+	jnc serial_send_wait_16		; If the bit is not set then the queue isn't ready for another byte
+	pop eax				; Get the byte back from the stack
+	mov dx, 0x03F8			; Serial data register
+	out dx, al			; Send the byte
+	pop edx
 	ret
 
 ; Display an error message that the CPU does not support 64-bit mode
@@ -296,19 +302,18 @@ pd_again:				; Create a 2 MiB page
 
 	jmp SYS64_CODE_SEL:start64	; Jump to 64-bit mode
 
-
 ; 32-bit function to send a char our via serial
 serial_send_32:
 	push edx
-	push eax		; Save EAX since the serial line status check clobbers AL
-	mov dx, 0x03FD		; Serial Line Status register
+	push eax			; Save EAX since the serial line status check clobbers AL
+	mov dx, 0x03FD			; Serial Line Status register
 serial_send_wait_32:
 	in al, dx
-	bt ax, 5		; Copy bit 5 (THR is empty) to the Carry Flag
-	jnc serial_send_wait_32	; If the bit is not set then the queue isn't ready for another byte
-	pop eax			; Get the byte back from the stack
-	mov dx, 0x03F8		; Serial data register
-	out dx, al		; Send the byte
+	bt ax, 5			; Copy bit 5 (THR is empty) to the Carry Flag
+	jnc serial_send_wait_32		; If the bit is not set then the queue isn't ready for another byte
+	pop eax				; Get the byte back from the stack
+	mov dx, 0x03F8			; Serial data register
+	out dx, al			; Send the byte
 	pop edx
 	ret
 
@@ -329,7 +334,7 @@ start64:
 	mov [0x000B809E], al
 
 	mov al, '0'
-	call serial_send_32
+	call serial_send_64
 
 	mov al, 2
 	mov ah, 22
@@ -372,8 +377,8 @@ clearcs64:
 	mov al, '2'
 	mov [0x000B809E], al
 
-	mov al, '2'
-	call serial_send_32
+;	mov al, '2'
+;	call serial_send_32
 
 ; Patch Pure64 AP code			; The AP's will be told to start execution at 0x8000
 	mov edi, 0x00008030		; We need to remove the BSP Jump call to get the AP's
@@ -467,8 +472,8 @@ make_interrupt_gates: 			; make gates for the other interrupts
 	mov [0x000B809C], al
 	mov al, '4'
 	mov [0x000B809E], al
-	mov al, '5'
-	call serial_send_32
+;	mov al, '5'
+;	call serial_send_32
 
 ; Clear memory 0xf000 - 0xf7ff for the infomap (2048 bytes)
 	xor rax, rax
@@ -487,8 +492,8 @@ clearmapnext:
 	mov [0x000B809C], al
 	mov al, '6'
 	mov [0x000B809E], al
-	mov al, '6'
-	call serial_send_32
+;	mov al, '6'
+;	call serial_send_32
 
 ; Make sure exceptions are working.
 ;	xor rax, rax
@@ -504,8 +509,8 @@ clearmapnext:
 	mov [0x000B809C], al
 	mov al, '8'
 	mov [0x000B809E], al
-	mov al, '8'
-	call serial_send_32
+;	mov al, '8'
+;	call serial_send_32
 
 ; Find init64.cfg
 ;	mov rbx, configname
@@ -542,8 +547,8 @@ clearmapnext:
 	mov [0x000B809C], al
 	mov al, 'E'
 	mov [0x000B809E], al
-	mov al, 'E'
-	call serial_send_32
+;	mov al, 'E'
+;	call serial_send_32
 
 ; Calculate amount of usable RAM from Memory Map
 	xor rcx, rcx
@@ -724,8 +729,8 @@ fini:	; For chainloading
 	mov [0x000B809C], al
 	mov [0x000B809E], al
 
-	mov al, '-'
-	call serial_send_32
+;	mov al, '-'
+;	call serial_send_32
 
 ; Clear all registers (skip the stack pointer)
 	xor rax, rax			; aka r0
@@ -744,7 +749,7 @@ fini:	; For chainloading
 	xor r14, r14
 	xor r15, r15
 
-	jmp 0x0000000000100000	; Jump to the kernel
+	jmp 0x0000000000100000		; Jump to the kernel
 
 nokernel:
 	mov al, 6
@@ -755,19 +760,19 @@ nokernel:
 	jmp $
 
 ; 64-bit function to send a char our via serial
-;serial_send_64:
-;	push rdx
-;	push rax		; Save EAX since the serial line status check clobbers AL
-;	mov dx, 0x03FD		; Serial Line Status register
-;serial_send_wait_64:
-;	in al, dx
-;	bt ax, 5		; Copy bit 5 (THR is empty) to the Carry Flag
-;	jnc serial_send_wait_64	; If the bit is not set then the queue isn't ready for another byte
-;	pop rax			; Get the byte back from the stack
-;	mov dx, 0x03F8		; Serial data register
-;	out dx, al		; Send the byte
-;	pop rdx
-;	ret
+serial_send_64:
+	push rdx
+	push rax			; Save EAX since the serial line status check clobbers AL
+	mov dx, 0x03FD			; Serial Line Status register
+serial_send_wait_64:
+	in al, dx
+	bt ax, 5			; Copy bit 5 (THR is empty) to the Carry Flag
+	jnc serial_send_wait_64		; If the bit is not set then the queue isn't ready for another byte
+	pop rax				; Get the byte back from the stack
+	mov dx, 0x03F8			; Serial data register
+	out dx, al			; Send the byte
+	pop rdx
+	ret
 
 %include "init_cpu.asm"
 %include "init_hdd.asm"
