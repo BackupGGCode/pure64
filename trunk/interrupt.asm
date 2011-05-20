@@ -28,9 +28,11 @@ interrupt_gate:				; handler for all other interrupts
 ; Real-time clock interrupt. IRQ 0x00, INT 0x20
 align 16
 timer:
+	push rax
 	add qword [os_Counter], 1	; 64-bit counter started at bootup
 	mov al, 0x20			; Acknowledge the IRQ
 	out 0x20, al
+	pop rax
 	iretq
 ; -----------------------------------------------------------------------------
 
