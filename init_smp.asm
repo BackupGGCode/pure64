@@ -14,8 +14,8 @@ smp_setup:
 	mov [0x000B809C], al
 	mov al, '0'
 	mov [0x000B809E], al
-;	mov al, 'S'
-;	call serial_send_32
+	mov al, 'S'
+	call serial_send_64
 
 ; Step 1: Get APIC Information via ACPI
 smp_check_for_acpi:			; Look for the Root System Description Pointer Structure
@@ -85,7 +85,7 @@ nextcore:
 	mov al, cl
 	add al, 48
 	call os_print_char
-;	call serial_send_32
+	call serial_send_64
 	pop rax
 
 	cmp cl, dl		; Is it the BSP?
@@ -116,8 +116,8 @@ wait1:
 	mov rbx, [os_Counter]
 	cmp rax, rbx
 	jg wait1
-;	mov al, 'i'
-;	call serial_send_32
+	mov al, 'i'
+	call serial_send_64
 
 ; Broadcast 'Startup' IPI to destination using vector 0x08 to specify entry-point is at the memory-address 0x00008000
 	mov al, cl
@@ -144,21 +144,20 @@ wait2:
 	mov rbx, [os_Counter]
 	cmp rax, rbx
 	jg wait2
-;	mov al, 's'
-;	call serial_send_32
+	mov al, 's'
+	call serial_send_64
 
 skipcore:
 	inc cl
 	jmp nextcore
 
 done:
-
 	mov al, '3'
 	mov [0x000B809C], al
 	mov al, 'A'
 	mov [0x000B809E], al
-;	mov al, 'S'
-;	call serial_send_32	
+	mov al, 'S'
+	call serial_send_64	
 
 ; Let things settle (Give the AP's some time to finish)
 	mov rax, [os_Counter]
@@ -193,7 +192,6 @@ noMP:
 	mov [0x000B809E], al
 
 ; Calculate speed of CPU (At this point the timer is firing at 1000Hz)
-	xchg bx, bx
 	cpuid
 	xor edx, edx
 	xor eax, eax
