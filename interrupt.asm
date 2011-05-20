@@ -30,6 +30,10 @@ align 16
 timer:
 	push rax
 	add qword [os_Counter], 1	; 64-bit counter started at bootup
+	mov rax, [os_Counter]
+	and al, 1			; Clear all but lowest bit (Can only be 0 or 1)
+	add al, 48
+	mov [0x000B8094], al
 	mov al, 0x20			; Acknowledge the IRQ
 	out 0x20, al
 	pop rax
