@@ -29,12 +29,45 @@ interrupt_gate:				; handler for all other interrupts
 align 16
 timer:
 	push rax
-	add qword [os_Counter], 1	; 64-bit counter started at bootup
-	mov rax, [os_Counter]
+	add qword [os_Counter_Timer], 1	; 64-bit counter started at bootup
+	mov rax, [os_Counter_Timer]
+	and al, 1			; Clear all but lowest bit (Can only be 0 or 1)
+	add al, 48
+	mov [0x000B8090], al
+	mov al, 0x20			; Acknowledge the IRQ
+	out 0x20, al
+	pop rax
+	iretq
+; -----------------------------------------------------------------------------
+
+
+; -----------------------------------------------------------------------------
+; Cascade interrupt. IRQ 0x02, INT 0x22
+align 16
+cascade:
+	push rax
+	mov al, 0x20			; Acknowledge the IRQ
+	out 0x20, al
+	pop rax
+	iretq
+; -----------------------------------------------------------------------------
+
+
+; -----------------------------------------------------------------------------
+; Real-time clock interrupt. IRQ 0x08, INT 0x28
+align 16
+rtc:
+	push rax
+	add qword [os_Counter_RTC], 1	; 64-bit counter started at bootup
+	mov rax, [os_Counter_RTC]
 	and al, 1			; Clear all but lowest bit (Can only be 0 or 1)
 	add al, 48
 	mov [0x000B8094], al
-	mov al, 0x20			; Acknowledge the IRQ
+	mov al, 0x0C			; Select RTC register C
+	out 0x70, al			; Port 0x70 is the RTC index, and 0x71 is the RTC data
+	in al, 0x71			; Read the value in register C
+	mov al, 0x20			; Acknowledge the IRQ on the PICs
+	out 0xA0, al
 	out 0x20, al
 	pop rax
 	iretq

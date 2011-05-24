@@ -10,6 +10,7 @@
 
 smp_setup:
 	sti				; Enable the timer
+	jmp $
 	mov al, '3'			; Start of MP init
 	mov [0x000B809C], al
 	mov al, '0'
@@ -110,10 +111,10 @@ verifyinit:
 	jc verifyinit
 	pop rsi
 
-	mov rax, [os_Counter]
+	mov rax, [os_Counter_Timer]
 	add rax, 10
 wait1:
-	mov rbx, [os_Counter]
+	mov rbx, [os_Counter_Timer]
 	cmp rax, rbx
 	jg wait1
 	mov al, 'i'
@@ -138,10 +139,10 @@ verifystartup1:
 	jc verifystartup1
 	pop rsi
 
-	mov rax, [os_Counter]
+	mov rax, [os_Counter_Timer]
 	add rax, 2
 wait2:
-	mov rbx, [os_Counter]
+	mov rbx, [os_Counter_Timer]
 	cmp rax, rbx
 	jg wait2
 	mov al, 's'
@@ -160,10 +161,10 @@ done:
 	call serial_send_64	
 
 ; Let things settle (Give the AP's some time to finish)
-	mov rax, [os_Counter]
+	mov rax, [os_Counter_Timer]
 	add rax, 10
 wait3:
-	mov rbx, [os_Counter]
+	mov rbx, [os_Counter_Timer]
 	cmp rax, rbx
 	jg wait3
 
@@ -195,12 +196,12 @@ noMP:
 	cpuid
 	xor edx, edx
 	xor eax, eax
-	mov rcx, [os_Counter]
+	mov rcx, [os_Counter_Timer]
 	add rcx, 10
 	rdtsc
 	push rax
 speedtest:
-	mov rbx, [os_Counter]
+	mov rbx, [os_Counter_Timer]
 	cmp rbx, rcx
 	jl speedtest
 	rdtsc

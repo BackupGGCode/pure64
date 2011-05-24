@@ -112,14 +112,13 @@ check_A20:
 	call serial_send_16
 
 ; Set up RTC
+	mov al, 0x0A
+	out 0x70, al
+	mov al, 00101101b		; RTC@32.768KHz (0010), Rate@8Hz (1101)
+	out 0x71, al
 	mov al, 0x0B
 	out 0x70, al
-	in al, 0x71
-	or al, 00000010b		; Bit 2 (0) Data Mode to BCD, Bit 1 (1) 24 hour mode
-	push ax
-	mov al, 0x0B
-	out 0x70, al
-	pop ax
+	mov al, 01000010b		; Periodic(6), 24H clock(2)
 	out 0x71, al
 
 	mov al, '6'
@@ -188,10 +187,10 @@ VBEdone:
 	call serial_send_16
 
 	in al, 0x21
-	mov al, 11111110b		; Disable all IRQs except for timer
+	mov al, 11111010b		; Enable Cascade, Timer
 	out 0x21, al
 	in al, 0xA1
-	mov al, 11111111b
+	mov al, 11111110b		; Enable RTC
 	out 0xA1, al
 
 	mov al, 'E'
