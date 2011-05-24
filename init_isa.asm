@@ -115,11 +115,15 @@ check_A20:
 	mov al, 0x0A
 	out 0x70, al
 	mov al, 00101101b		; RTC@32.768KHz (0010), Rate@8Hz (1101)
+;	mov al, 00100110b		; RTC@32.768KHz (0010), Rate@1024Hz (0110)
 	out 0x71, al
 	mov al, 0x0B
 	out 0x70, al
 	mov al, 01000010b		; Periodic(6), 24H clock(2)
 	out 0x71, al
+	mov al, 0x0C			; Select RTC register C
+	out 0x70, al			; Port 0x70 is the RTC index, and 0x71 is the RTC data
+	in al, 0x71			; Read the value in register C
 
 	mov al, '6'
 	call serial_send_16
