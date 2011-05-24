@@ -114,8 +114,8 @@ check_A20:
 ; Set up RTC
 	mov al, 0x0A
 	out 0x70, al
-	mov al, 00101101b		; RTC@32.768KHz (0010), Rate@8Hz (1101)
-;	mov al, 00100110b		; RTC@32.768KHz (0010), Rate@1024Hz (0110)
+;	mov al, 00101101b		; RTC@32.768KHz (0010), Rate@8Hz (1101)
+	mov al, 00100111b		; RTC@32.768KHz (0010), Rate@512Hz (0110)
 	out 0x71, al
 	mov al, 0x0B
 	out 0x70, al
