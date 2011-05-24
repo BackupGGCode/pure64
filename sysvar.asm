@@ -27,7 +27,8 @@ os_IOAPICAddress:	equ SystemVariables + 0x08
 os_ACPITableAddress:	equ SystemVariables + 0x10
 screen_cursor_offset:	equ SystemVariables + 0x18
 hd1_maxlba:		equ SystemVariables + 0x20
-os_Counter:		equ SystemVariables + 0x28
+os_Counter_Timer:	equ SystemVariables + 0x28
+os_Counter_RTC:		equ SystemVariables + 0x30
 
 ; DD - Starting at offset 128, increments by 4
 hd1_size:		equ SystemVariables + 128
