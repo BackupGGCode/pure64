@@ -9,7 +9,7 @@
 
 
 smp_setup:
-	sti				; Enable the timer
+	sti				; Enable the Timer and RTC
 	jmp $
 	mov al, '3'			; Start of MP init
 	mov [0x000B809C], al
