@@ -12,8 +12,8 @@ isa_setup:
 	mov ecx, 2048
 	rep stosd
 
-	mov al, '1'
-	call serial_send_16
+;	mov al, '1'
+;	call serial_send_16
 
 ; Get the BIOS E820 Memory Map
 ; use the INT 0x15, eax= 0xE820 BIOS function to get a memory map
@@ -67,8 +67,8 @@ memmapend:
 	mov ecx, 8
 	rep stosd
 
-	mov al, '2'
-	call serial_send_16
+;	mov al, '2'
+;	call serial_send_16
 
 ; Enable the A20 gate
 set_A20:
@@ -84,56 +84,55 @@ check_A20:
 	mov al, 0xDF
 	out 0x60, al
 
-	mov al, '3'
-	call serial_send_16
+;	mov al, '3'
+;	call serial_send_16
 
 ; Set PIT Channel 0 to fire at 1000Hz (Divisor = 1193180 / hz)
-	mov al, 0x36			; Set Timer
+	mov al, 00110110b		; Set Timer - Channel 0, lobyte/highbyte, square wave, binary
 	out 0x43, al
-	mov al, 0xA9			; We want 100MHz so 0x2E9B
-	out 0x40, al			; 1000MHz would be 0x04A9
+	mov al, 0xA9			; We want 1000MHz so 0x04A9
+	out 0x40, al
 	mov al, 0x04
 	out 0x40, al
 
-	mov al, '4'
-	call serial_send_16
+;	mov al, '4'
+;	call serial_send_16
 
 ; Set keyboard repeat rate to max
-	mov al, 0xf3
-	out 0x60, al			; Set Typematic Rate/Delay
-	xor al, al
-	out 0x60, al			; 30 cps and .25 second delay
-	mov al, 0xed
-	out 0x60, al			; Set/Reset LEDs
-	xor al, al
-	out 0x60, al			; all off
+;	mov al, 0xf3
+;	out 0x60, al			; Set Typematic Rate/Delay
+;	xor al, al
+;	out 0x60, al			; 30 cps and .25 second delay
+;	mov al, 0xed
+;	out 0x60, al			; Set/Reset LEDs
+;	xor al, al
+;	out 0x60, al			; all off
 
-	mov al, '5'
-	call serial_send_16
+;	mov al, '5'
+;	call serial_send_16
 
 ; Set up RTC
-	mov al, 0x0A
-	out 0x70, al
+;	mov al, 0x0A
+;	out 0x70, al
 ;	mov al, 00101101b		; RTC@32.768KHz (0010), Rate@8Hz (1101)
-	mov al, 00100111b		; RTC@32.768KHz (0010), Rate@512Hz (0110)
-	out 0x71, al
-	mov al, 0x0B
-	out 0x70, al
-	mov al, 01000010b		; Periodic(6), 24H clock(2)
-	out 0x71, al
-	mov al, 0x0C			; Select RTC register C
-	out 0x70, al			; Port 0x70 is the RTC index, and 0x71 is the RTC data
-	in al, 0x71			; Read the value in register C
+;	out 0x71, al
+;	mov al, 0x0B
+;	out 0x70, al
+;	mov al, 01000010b		; Periodic(6), 24H clock(2)
+;	out 0x71, al
+;	mov al, 0x0C			; Select RTC register C
+;	out 0x70, al			; Port 0x70 is the RTC index, and 0x71 is the RTC data
+;	in al, 0x71			; Read the value in register C
 
-	mov al, '6'
-	call serial_send_16
+;	mov al, '6'
+;	call serial_send_16
 
 ; VBE init
 	cmp byte [cfg_vesa], 1		; Check if VESA should be enabled
 	jne VBEdone			; If not then skip VESA init
 
-	mov al, '7'
-	call serial_send_16
+;	mov al, '7'
+;	call serial_send_16
 
 	mov edi, VBEModeInfoBlock	; VBE data will be stored at this address
 	mov ax, 0x4F01			; GET SuperVGA MODE INFORMATION - http://www.ctyme.com/intr/rb-0274.htm
@@ -160,13 +159,13 @@ check_A20:
 
 VBEfail:
 	mov byte [cfg_vesa], 0		; Clear the VESA config as it was not sucessful
-	mov al, 'B'
-	call serial_send_16
+;	mov al, 'B'
+;	call serial_send_16
 
 VBEdone:
 
-	mov al, 'C'
-	call serial_send_16
+;	mov al, 'C'
+;	call serial_send_16
 
 ; Remap IRQ's
 ; As heard on an episode of Jerry Springer.. "It's time to lose the zero (8259 PIC) and get with a hero (IOAPIC)".
@@ -187,18 +186,16 @@ VBEdone:
 	out 0x21, al
 	out 0xA1, al
 
-	mov al, 'D'
-	call serial_send_16
+;	mov al, 'D'
+;	call serial_send_16
 
-	in al, 0x21
-	mov al, 11111010b		; Enable Cascade, Timer
+	mov al, 11111110b		; Enable Timer
 	out 0x21, al
-	in al, 0xA1
-	mov al, 11111110b		; Enable RTC
+	mov al, 11111111b
 	out 0xA1, al
 
-	mov al, 'E'
-	call serial_send_16
+;	mov al, 'E'
+;	call serial_send_16
 
 ret
 
