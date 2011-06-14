@@ -77,11 +77,11 @@ no_mbr:
 	mov eax, 0x80000000		; Extended-function 8000000h.
 	cpuid				; Is largest extended function
 	cmp eax, 0x80000000		; any function > 80000000h?
-	jbe near no_long_mode		; If not, no long mode.
+	jbe no_long_mode		; If not, no long mode.
 	mov eax, 0x80000001		; Extended-function 8000001h.
 	cpuid				; Now EDX = extended-features flags.
 	bt edx, 29			; Test if long mode is supported.
-	jnc near no_long_mode		; Exit if not supported.
+	jnc no_long_mode		; Exit if not supported.
 
 ;	mov al, '0'
 ;	call serial_send_16
@@ -136,6 +136,20 @@ print_string_16_done:
 no_long_mode:
 	mov si, no64msg
 	call print_string_16
+
+buffer_test:
+	in al, 0x64
+	test al, 0x01
+	jz buffer_empty
+	in al, 0x60
+	jmp buffer_test
+
+buffer_empty:
+	in al, 0x64			; wait for key pressed
+	test al, 0x01
+	jz buffer_empty
+
+	int 0xff			; reboot by causing a triple fault
 	jmp $
 
 %include "init_isa.asm"
@@ -149,7 +163,7 @@ align 16
 gdt32:
 dw 0x0000, 0x0000, 0x0000, 0x0000	; Null desciptor
 dw 0xFFFF, 0x0000, 0x9A00, 0x00CF	; 32-bit code desciptor
-dw 0xFFFF, 0x0000, 0x9200, 0x008F	; 32-bit data desciptor
+dw 0xFFFF, 0x0000, 0x9200, 0x00CF	; 32-bit data desciptor
 gdt32_end:
 
 align 16
@@ -262,9 +276,9 @@ pd_again:				; Create a 2 MiB page
 ;	mov al, '4'
 ;	call serial_send_32
 
-; Enable physical-address extensions (set CR4.PAE=1)
+; Enable extended properties
 	mov eax, cr4
-	or eax, 0x000000020		; PAE (Bit 5)
+	or eax, 0x0000000B0		; PGE (Bit 7), PAE (Bit 5), and PSE (Bit 4)
 	mov cr4, eax
 
 ;	mov al, '5'
@@ -277,10 +291,10 @@ pd_again:				; Create a 2 MiB page
 ;	mov al, '6'
 ;	call serial_send_32
 
-; Enable long mode (set EFER.LME=1)
+; Enable long mode and SYSCALL/SYSRET
 	mov ecx, 0xC0000080		; EFER MSR number
 	rdmsr				; Read EFER
-	or eax, 0x00000100 		; LME (Bit 8)
+	or eax, 0x00000101 		; LME (Bit 8)
 	wrmsr				; Write EFER
 
 ;	mov al, '7'
@@ -295,7 +309,7 @@ pd_again:				; Create a 2 MiB page
 ;	mov al, '-'
 ;	call serial_send_32
 
-; Enable paging to activate long mode (set CR0.PG=1)
+; Enable paging to activate long mode
 	mov eax, cr0
 	or eax, 0x80000000		; PG (Bit 31)
 	mov cr0, eax
@@ -471,8 +485,6 @@ make_interrupt_gates: 			; make gates for the other interrupts
 
 	lidt [IDTR64]			; load IDT register
 	sti				; enable interrupts
-	
-	jmp $
 
 ; Debug
 	mov al, '4'
@@ -699,7 +711,7 @@ nodefaultconfig:
 	call os_print_string
 	mov rsi, msg_mb
 	call os_print_string
-
+jmp $
 ; =============================================================================
 ; Chainload the kernel attached to the end of the pure64.sys binary
 ; Windows - copy /b pure64.sys + kernel64.sys

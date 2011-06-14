@@ -118,9 +118,9 @@ init_cpu_msrok:
 	mov cr0, rax
 
 ; Enable Paging Global Extensions
-	mov rax, cr4
-	bts rax, 7			; Set Paging Global Extensions (Bit 7)
-	mov cr4, rax
+;	mov rax, cr4
+;	bts rax, 7			; Set Paging Global Extensions (Bit 7)
+;	mov cr4, rax
 
 ; Enable Floating Point
 	mov rax, cr0
