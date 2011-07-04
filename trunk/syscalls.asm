@@ -242,7 +242,6 @@ os_string_uppercase_done:
 ; -----------------------------------------------------------------------------
 ; os_dump_regs -- Dump the values on the registers to the screen (For debug purposes)
 ; IN/OUT: Nothing
-; FIX: Clean this up.. it could be shorter with loops.
 os_dump_regs:
 	push r15
 	push r14
@@ -262,28 +261,46 @@ os_dump_regs:
 	push rax
 
 	mov byte [os_dump_reg_stage], 0x00	; Reset the stage to 0 since we are starting
+	mov rcx, rsp
+	call os_print_newline
 
 os_dump_regs_again:
 	mov rsi, os_dump_reg_string00
 	xor rax, rax
 	xor rbx, rbx
 	mov al, [os_dump_reg_stage]
-	mov bl, 5	; each string is 5 bytes
-	mul bl		; ax = bl x al
+	mov bl, 5				; each string is 5 bytes
+	mul bl					; ax = bl x al
 	add rsi, rax
 	call os_print_string			; Print the register name
 
 	mov rdi, os_dump_reg_tstring
-	pop rax
+	mov rsi, rdi
+	mov rax, [rcx]
+	add rcx, 8
 	call os_int_to_hex_string		; Convert the register value to a hex string
-	mov rsi, os_dump_reg_tstring
 	call os_print_string			; Print the hex string
 
-	inc byte [os_dump_reg_stage]
+	add byte [os_dump_reg_stage], 1
 	cmp byte [os_dump_reg_stage], 0x10
 	jne os_dump_regs_again
 
-;	call os_print_newline
+	pop rax
+	pop rbx
+	pop rcx
+	pop rdx
+	pop rsi
+	pop rdi
+	pop rbp
+	pop rsp
+	pop r8
+	pop r9
+	pop r10
+	pop r11
+	pop r12
+	pop r13
+	pop r14
+	pop r15 
 
 ret
 

@@ -711,7 +711,7 @@ nodefaultconfig:
 	call os_print_string
 	mov rsi, msg_mb
 	call os_print_string
-jmp $
+
 ; =============================================================================
 ; Chainload the kernel attached to the end of the pure64.sys binary
 ; Windows - copy /b pure64.sys + kernel64.sys
