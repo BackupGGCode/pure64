@@ -71,12 +71,12 @@ makempgonow:
 	mov al, '8'
 	mov [0x000B809E], al
 
-nextcore:
+smp_send_INIT:
 	cmp rsi, 0x0000000000005900
-	je done
+	je smp_send_INIT_done
 	lodsb
 	cmp al, 1		; Is it enabled?
-	jne skipcore
+	jne smp_send_INIT_skipcore
 
 ;	push rax		; Debug - display APIC ID
 ;	mov al, cl
@@ -86,7 +86,7 @@ nextcore:
 ;	pop rax
 
 	cmp cl, dl		; Is it the BSP?
-	je skipcore
+	je smp_send_INIT_skipcore
 
 ; Broadcast 'INIT' IPI to APIC ID in AL
 	mov al, cl
@@ -99,13 +99,19 @@ nextcore:
 	add rdi, 0x300
 	stosd
 	push rsi
-verifyinit:
+smp_send_INIT_verify:
 	mov rsi, [os_LocalAPICAddress]
 	add rsi, 0x300
 	lodsd
 	bt eax, 12			; Verify that the command completed
-	jc verifyinit
+	jc smp_send_INIT_verify
 	pop rsi
+
+smp_send_INIT_skipcore:
+	inc cl
+	jmp smp_send_INIT	
+
+smp_send_INIT_done:
 
 	mov rax, [os_Counter_Timer]
 	add rax, 10
@@ -115,6 +121,25 @@ wait1:
 	jg wait1
 ;	mov al, 'i'
 ;	call serial_send_64
+
+	mov rsi, 0x0000000000005800
+	xor ecx, ecx
+smp_send_SIPI:
+	cmp rsi, 0x0000000000005900
+	je smp_send_SIPI_done
+	lodsb
+	cmp al, 1		; Is it enabled?
+	jne smp_send_SIPI_skipcore
+
+;	push rax		; Debug - display APIC ID
+;	mov al, cl
+;	add al, 48
+;	call os_print_char
+;	call serial_send_64
+;	pop rax
+
+	cmp cl, dl		; Is it the BSP?
+	je smp_send_SIPI_skipcore
 
 ; Broadcast 'Startup' IPI to destination using vector 0x08 to specify entry-point is at the memory-address 0x00008000
 	mov al, cl
@@ -127,13 +152,19 @@ wait1:
 	add rdi, 0x300
 	stosd
 	push rsi
-verifystartup1:
+smp_send_SIPI_verify:
 	mov rsi, [os_LocalAPICAddress]
 	add rsi, 0x300
 	lodsd
 	bt eax, 12			; Verify that the command completed
-	jc verifystartup1
+	jc smp_send_SIPI_verify
 	pop rsi
+
+smp_send_SIPI_skipcore:
+	inc cl
+	jmp smp_send_SIPI	
+
+smp_send_SIPI_done:
 
 	mov rax, [os_Counter_Timer]
 	add rax, 2
@@ -144,9 +175,9 @@ wait2:
 ;	mov al, 's'
 ;	call serial_send_64
 
-skipcore:
-	inc cl
-	jmp nextcore
+;skipcore:
+;	inc cl
+;	jmp nextcore
 
 done:
 	mov al, '5'
