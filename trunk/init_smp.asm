@@ -165,20 +165,6 @@ smp_send_SIPI_skipcore:
 	jmp smp_send_SIPI	
 
 smp_send_SIPI_done:
-
-	mov rax, [os_Counter_Timer]
-	add rax, 2
-wait2:
-	mov rbx, [os_Counter_Timer]
-	cmp rax, rbx
-	jg wait2
-;	mov al, 's'
-;	call serial_send_64
-
-;skipcore:
-;	inc cl
-;	jmp nextcore
-
 done:
 	mov al, '5'
 	mov [0x000B809C], al
