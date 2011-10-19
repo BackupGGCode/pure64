@@ -13,7 +13,10 @@ exception_gate:
 	call os_print_string
 	mov rsi, exc_string
 	call os_print_string
-	jmp $					; hang
+exception_gate_halt:
+	cli				; Disable interrupts
+	hlt				; Halt the system
+	jmp exception_gate_halt
 ; -----------------------------------------------------------------------------
 
 
