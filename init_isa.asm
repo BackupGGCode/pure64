@@ -112,17 +112,17 @@ check_A20:
 ;	call serial_send_16
 
 ; Set up RTC
-;	mov al, 0x0A
-;	out 0x70, al
-;	mov al, 00101101b		; RTC@32.768KHz (0010), Rate@8Hz (1101)
-;	out 0x71, al
-;	mov al, 0x0B
-;	out 0x70, al
-;	mov al, 01000010b		; Periodic(6), 24H clock(2)
-;	out 0x71, al
-;	mov al, 0x0C			; Select RTC register C
-;	out 0x70, al			; Port 0x70 is the RTC index, and 0x71 is the RTC data
-;	in al, 0x71			; Read the value in register C
+	mov al, 0x0A
+	out 0x70, al
+	mov al, 00101101b		; RTC@32.768KHz (0010), Rate@8Hz (1101)
+	out 0x71, al
+	mov al, 0x0B
+	out 0x70, al
+	mov al, 01000010b		; Periodic(6), 24H clock(2)
+	out 0x71, al
+	mov al, 0x0C			; Select RTC register C
+	out 0x70, al			; Port 0x70 is the RTC index, and 0x71 is the RTC data
+	in al, 0x71			; Read the value in register C
 
 ;	mov al, '6'
 ;	call serial_send_16
@@ -189,9 +189,9 @@ VBEdone:
 ;	mov al, 'D'
 ;	call serial_send_16
 
-	mov al, 11111110b		; Enable Timer
+	mov al, 11111010b		; Enable Timer
 	out 0x21, al
-	mov al, 11111111b
+	mov al, 11111110b
 	out 0xA1, al
 
 ;	mov al, 'E'
