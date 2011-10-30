@@ -32,11 +32,13 @@ interrupt_gate:				; handler for all other interrupts
 align 16
 timer:
 	push rax
+	mov al, 'T'
+	mov [0x000B808C], al
 	add qword [os_Counter_Timer], 1	; 64-bit counter started at bootup
 	mov rax, [os_Counter_Timer]
 	and al, 1			; Clear all but lowest bit (Can only be 0 or 1)
 	add al, 48
-	mov [0x000B8090], al
+	mov [0x000B808E], al
 	mov al, 0x20			; Acknowledge the IRQ
 	out 0x20, al
 	pop rax
@@ -61,6 +63,8 @@ cascade:
 align 16
 rtc:
 	push rax
+	mov al, 'R'
+	mov [0x000B8092], al
 	add qword [os_Counter_RTC], 1	; 64-bit counter started at bootup
 	mov rax, [os_Counter_RTC]
 	and al, 1			; Clear all but lowest bit (Can only be 0 or 1)

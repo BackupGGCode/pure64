@@ -476,12 +476,12 @@ make_interrupt_gates: 			; make gates for the other interrupts
 	mov rdi, 0x20			; Set up Timer IRQ handler
 	mov rax, timer
 	call create_gate
-;	mov rdi, 0x22			; Set up Cascade IRQ handler
-;	mov rax, cascade
-;	call create_gate
-;	mov rdi, 0x28			; Set up RTC IRQ handler
-;	mov rax, rtc
-;	call create_gate	
+	mov rdi, 0x22			; Set up Cascade IRQ handler
+	mov rax, cascade
+	call create_gate
+	mov rdi, 0x28			; Set up RTC IRQ handler
+	mov rax, rtc
+	call create_gate	
 
 	lidt [IDTR64]			; load IDT register
 	sti				; enable interrupts
@@ -619,6 +619,12 @@ endmemcalc:
 	and cx, 0xFFFE		; Make sure it is an even number (in case we added 1 to an even number)
 	mov word [mem_amount], cx
 
+; Debug
+	mov al, '6'
+	mov [0x000B809C], al
+	mov al, '2'
+	mov [0x000B809E], al
+
 ; Convert CPU speed value to string
 	xor rax, rax
 	mov ax, [cpu_speed]
@@ -685,6 +691,12 @@ endmemcalc:
 	mov rsi, msg_noconfig
 	call os_print_string
 nodefaultconfig:
+
+; Debug
+	mov al, '6'
+	mov [0x000B809C], al
+	mov al, '4'
+	mov [0x000B809E], al
 
 ; Print info on CPU, MEM, and HD
 	mov ax, 0x0004
