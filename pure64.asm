@@ -749,13 +749,19 @@ nodefaultconfig:
 	cmp ax, 0x0000
 	je near nokernel
 
+; Debug
+	mov al, '6'
+	mov [0x000B809C], al
+	mov al, '6'
+	mov [0x000B809E], al
+
 ; Load 64-bit kernel from drive to 0x0000000000010000
 	mov rdi, 0x0000000000100000
 readfile_getdata:
-;	push rax
-;	mov al, '.'		; Show loading progress
-;	call os_print_char
-;	pop rax
+	push rax
+	mov al, '.'		; Show loading progress
+	call os_print_char
+	pop rax
 	call readcluster	; store in memory
 	cmp ax, 0xFFFF		; Value for end of cluster chain.
 	jne readfile_getdata	; Are there more clusters? If so then read again.. if not fall through.
@@ -773,10 +779,10 @@ fini:	; For chainloading
 	call os_print_string
 
 ; Debug
-	mov al, ' '			; Clear the debug messages
-	mov [0x000B809A], al
-	mov [0x000B809C], al
-	mov [0x000B809E], al
+;	mov al, ' '			; Clear the debug messages
+;	mov [0x000B809A], al
+;	mov [0x000B809C], al
+;	mov [0x000B809E], al
 
 ;	mov al, '-'
 ;	call serial_send_64

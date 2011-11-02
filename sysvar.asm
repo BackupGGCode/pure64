@@ -76,7 +76,7 @@ msg_mhz:		db 'MHz x', 0
 msg_MEM:		db ']  [MEM: ', 0
 msg_mb:			db ' MiB]', 0
 msg_HDD:		db '  [HDD: ', 0
-msg_loadingkernel:	db 'Loading software...', 0
+msg_loadingkernel:	db 'Loading software', 0;...', 0
 msg_startingkernel:	db 'Starting software.', 0
 msg_noconfig:		db '(default config)', 0
 no64msg:		db 'ERROR: This computer does not support 64-Bit mode. Press any key to reboot.', 0
