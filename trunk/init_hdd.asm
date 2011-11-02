@@ -7,13 +7,21 @@
 
 
 hdd_setup:
+; Probe for hard drive
+	mov dx, 0x01F7			; Primary ATA Regular Status Byte
+	in al, dx
+	cmp al, 0xFF			; Check for "float" value
+	je hdd_setup_err_drive
+
 ; Read first sector of HDD into memory
-	xor rax, rax
+	xor rax, rax			; We want sector 0
 	mov rdi, hdbuffer
 	push rdi
-	mov rcx, 1
+	mov rcx, 1			; Read one sector
 	call readsectors
 	pop rdi
+	cmp rcx, 0
+	je hdd_setup_err_read
 
 	cmp byte [cfg_mbr], 0x01	; Did we boot from a MBR drive
 	jne hdd_setup_no_mbr		; If not then we already have the correct sector
@@ -27,7 +35,9 @@ hdd_setup:
 	push rdi
 	mov rcx, 1
 	call readsectors
-	pop rdi	
+	pop rdi
+	cmp rcx, 0
+	je hdd_setup_err_read
 
 hdd_setup_no_mbr:
 ; Get the values we need to start using fat16
@@ -78,6 +88,15 @@ lessthan65536sectors:
 
 ret
 
+hdd_setup_err_drive:
+	mov rsi, hdd_setup_no_drive
+	call os_print_string
+	jmp exception_gate_halt
+
+hdd_setup_err_read:
+	mov rsi, hdd_setup_read_error
+	call os_print_string
+	jmp exception_gate_halt
 
 ; -----------------------------------------------------------------------------
 ; readsectors -- Read sectors on the hard drive
@@ -154,6 +173,10 @@ readsectors_dataready:
 	dec rbx			; RBX is the "sectors to read" counter
 	cmp rbx, 0
 	jne readsectors_nextsector
+
+;	xchg bx, bx
+;	test al, 0x21		; ERR or DF set?
+;	je readsectors_fail
 
 	pop rcx
 	pop rax
