@@ -5,6 +5,9 @@
 ; INIT HDD
 ; =============================================================================
 
+; The code below only utilizes the Master drive on the Primary ATA Bus.
+; Port IO is hard-coded to Primary : 0x01F0 - 0x01F7, 0x03F6
+; Secondary Bus would be 0x0170 - 0x0177, 0x0376
 
 hdd_setup:
 ; Probe for hard drive
@@ -12,6 +15,8 @@ hdd_setup:
 	in al, dx
 	cmp al, 0xFF			; Check for "float" value
 	je hdd_setup_err_drive
+	test al, 0xA9			; Is ERR, DRQ, DF, or BSY set?
+	jne hdd_setup_err_read
 
 ; Read first sector of HDD into memory
 	xor rax, rax			; We want sector 0
@@ -115,6 +120,8 @@ readsectors:
 
 	push rcx		; Save RCX for use in the read loop
 	mov rbx, rcx		; Store number of sectors to read
+	cmp rcx, 0
+	je readsectors_fail	; Try to read nothing? Fail!
 	cmp rcx, 256
 	jg readsectors_fail	; Over 256? Fail!
 	jne readsectors_skip	; Not 256? No need to modify CL
@@ -174,9 +181,8 @@ readsectors_dataready:
 	cmp rbx, 0
 	jne readsectors_nextsector
 
-;	xchg bx, bx
-;	test al, 0x21		; ERR or DF set?
-;	je readsectors_fail
+	test al, 0x21		; ERR or DF set?
+	jne readsectors_fail
 
 	pop rcx
 	pop rax
