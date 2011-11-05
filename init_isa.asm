@@ -112,17 +112,21 @@ check_A20:
 ;	call serial_send_16
 
 ; Set up RTC
+; Port 0x70 is RTC Address, and 0x71 is RTC Data
+rtc_poll:
+	mov al, 0x0A			; Status Register A
+	out 0x70, al
+	in al, 0x71
+	test al, 0x80			; Is there an update in process?
+	jne rtc_poll			; If so then keep polling
 	mov al, 0x0A
 	out 0x70, al
 	mov al, 00101101b		; RTC@32.768KHz (0010), Rate@8Hz (1101)
 	out 0x71, al
-	mov al, 0x0B
+	mov al, 0x0B			; Status Register B
 	out 0x70, al
-	mov al, 01000010b		; Periodic(6), 24H clock(2)
+	or al, 01000010b		; Set Periodic(6), 24H clock(1)
 	out 0x71, al
-	mov al, 0x0C			; Select RTC register C
-	out 0x70, al			; Port 0x70 is the RTC index, and 0x71 is the RTC data
-	in al, 0x71			; Read the value in register C
 
 ;	mov al, '6'
 ;	call serial_send_16
