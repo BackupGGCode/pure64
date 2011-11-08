@@ -834,6 +834,7 @@ nokernel:
 %include "init_smp.asm"
 %include "syscalls.asm"
 %include "interrupt.asm"
+%include "pci.asm"
 %include "fat16.asm"
 %include "sysvar.asm"
 
