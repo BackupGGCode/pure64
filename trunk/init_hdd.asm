@@ -10,11 +10,54 @@
 ; Secondary Bus would be 0x0170 - 0x0177, 0x0376
 
 hdd_setup:
-; Probe for hard drive
+; Probe for a hard drive controller
+	xor ebx, ebx
+	xor ecx, ecx
+findcontroller:
+	cmp bx, 256			; Search up to 256 buses
+	je hdd_setup_err_drive		; No drive detected
+	cmp cl, 32			; Up to 32 devices per bus
+	jne findcontroller_1
+	add bx, 1
+	xor ecx, ecx
+findcontroller_1:
+	mov dl, 2			; We want the Class/Device code
+	call os_pci_read_reg
+	add cl, 1
+	shr rax, 16
+	cmp ax, 0x0106			; Mass storage device, SATA
+	jne findcontroller
+	sub cl, 1
+	add dl, 2
+	call os_pci_read_reg
+	call os_debug_dump_eax
+	call os_print_newline
+	add dl, 1
+	call os_pci_read_reg
+	call os_debug_dump_eax
+	call os_print_newline
+	add dl, 1
+	call os_pci_read_reg
+	call os_debug_dump_eax
+	call os_print_newline
+	add dl, 1
+	call os_pci_read_reg
+	call os_debug_dump_eax
+	call os_print_newline
+	add dl, 1
+	call os_pci_read_reg
+	call os_debug_dump_eax
+	call os_print_newline
+	add dl, 1
+	call os_pci_read_reg
+	call os_debug_dump_eax
+	call os_print_newline	
+
+; Probe for PATA hard drive
 	mov dx, 0x01F7			; Primary ATA Regular Status Byte
 	in al, dx
 	cmp al, 0xFF			; Check for "float" value
-	je hdd_setup_err_drive
+	je hdd_setup_err_drive		; No drive detected
 	test al, 0xA9			; Is ERR, DRQ, DF, or BSY set?
 	jne hdd_setup_err_read
 

@@ -139,6 +139,36 @@ os_print_char_hex:
 
 
 ; -----------------------------------------------------------------------------
+; os_debug_dump_(rax|eax|ax|al) -- Dump content of RAX, EAX, AX, or AL to the screen in hex format
+;  IN:	RAX = content to dump
+; OUT:	Nothing, all registers preserved
+os_debug_dump_rax:
+	ror rax, 56
+	call os_print_char_hex
+	rol rax, 8
+	call os_print_char_hex
+	rol rax, 8
+	call os_print_char_hex
+	rol rax, 8
+	call os_print_char_hex
+	rol rax, 32
+os_debug_dump_eax:
+	ror rax, 24
+	call os_print_char_hex
+	rol rax, 8
+	call os_print_char_hex
+	rol rax, 16
+os_debug_dump_ax:
+	ror rax, 8
+	call os_print_char_hex
+	rol rax, 8
+os_debug_dump_al:
+	call os_print_char_hex
+	ret
+; -----------------------------------------------------------------------------
+
+
+; -----------------------------------------------------------------------------
 ; os_string_copy -- Copy the contents of one string into another
 ;  IN:	RSI = source
 ;	RDI = destination
