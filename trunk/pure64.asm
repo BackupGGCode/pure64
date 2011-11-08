@@ -750,10 +750,12 @@ nodefaultconfig:
 	je near nokernel
 
 ; Debug
+	push rax
 	mov al, '6'
 	mov [0x000B809C], al
 	mov al, '6'
 	mov [0x000B809E], al
+	pop rax
 
 ; Load 64-bit kernel from drive to 0x0000000000010000
 	mov rdi, 0x0000000000100000
