@@ -40,10 +40,11 @@ findcontroller_1:
 	cmp ax, 0x0106			; Mass storage device, SATA
 	jne findcontroller
 	sub cl, 1
-	add dl, 2
+	
+	mov dl, 4			; BAR0
 	call os_pci_read_reg
-	call os_debug_dump_eax
 	and ax, 0xFFFC			; AX now holds the Base IO Address (clear the low 2 bits)
+;	call os_debug_dump_eax
 	mov dx, ax
 	mov [ata_base], dx
 	in al, dx
