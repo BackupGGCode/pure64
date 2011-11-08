@@ -47,6 +47,7 @@ fat16_BytesPerSector:	equ SystemVariables + 264
 fat16_ReservedSectors:	equ SystemVariables + 266
 fat16_SectorsPerFat:	equ SystemVariables + 268
 fat16_RootDirEnts:	equ SystemVariables + 270
+ata_base:		equ SystemVariables + 272
 
 ; DB - Starting at offset 384, increments by 1
 hd1_enable:		equ SystemVariables + 384
