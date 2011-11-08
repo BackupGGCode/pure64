@@ -10,7 +10,19 @@
 ; Secondary Bus would be 0x0170 - 0x0177, 0x0376
 
 hdd_setup:
+; Probe for PATA hard drive
+	mov dx, 0x01F0
+	mov [ata_base], dx
+	add dx, 7			; Primary ATA Regular Status Byte
+	in al, dx
+	cmp al, 0xFF			; Check for "float" value
+	je hdd_setup_try_sata		; No drive detected
+	test al, 0xA9			; Is ERR, DRQ, DF, or BSY set?
+	jne hdd_setup_err_read
+	jmp hdd_setup_load_sector
+
 ; Probe for a hard drive controller
+hdd_setup_try_sata:
 	xor ebx, ebx
 	xor ecx, ecx
 findcontroller:
@@ -31,37 +43,17 @@ findcontroller_1:
 	add dl, 2
 	call os_pci_read_reg
 	call os_debug_dump_eax
-	call os_print_newline
-	add dl, 1
-	call os_pci_read_reg
-	call os_debug_dump_eax
-	call os_print_newline
-	add dl, 1
-	call os_pci_read_reg
-	call os_debug_dump_eax
-	call os_print_newline
-	add dl, 1
-	call os_pci_read_reg
-	call os_debug_dump_eax
-	call os_print_newline
-	add dl, 1
-	call os_pci_read_reg
-	call os_debug_dump_eax
-	call os_print_newline
-	add dl, 1
-	call os_pci_read_reg
-	call os_debug_dump_eax
-	call os_print_newline	
-
-; Probe for PATA hard drive
-	mov dx, 0x01F7			; Primary ATA Regular Status Byte
+	and ax, 0xFFFC			; AX now holds the Base IO Address (clear the low 2 bits)
+	mov dx, ax
+	mov [ata_base], dx
 	in al, dx
 	cmp al, 0xFF			; Check for "float" value
 	je hdd_setup_err_drive		; No drive detected
 	test al, 0xA9			; Is ERR, DRQ, DF, or BSY set?
-	jne hdd_setup_err_read
+	jne hdd_setup_err_read	
 
 ; Read first sector of HDD into memory
+hdd_setup_load_sector:
 	xor rax, rax			; We want sector 0
 	mov rdi, hdbuffer
 	push rdi
@@ -172,7 +164,9 @@ readsectors:
 readsectors_skip:
 
 	push rax		; Save RAX since we are about to overwrite it
-	mov dx, 0x01F2		; 0x01F2 - Sector count Port 7:0
+	mov dx, [ata_base]
+	;mov dx, 0x01F2		; 0x01F2 - Sector count Port 7:0
+	add dx, 2
 	mov al, cl		; Read CL sectors
 	out dx, al
 	pop rax			; Restore RAX which is our sector number
