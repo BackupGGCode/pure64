@@ -37,6 +37,7 @@ fat16_TotalSectors:	equ SystemVariables + 136
 fat16_DataStart:	equ SystemVariables + 140
 fat16_RootStart:	equ SystemVariables + 144
 fat16_PartitionOffset:	equ SystemVariables + 148
+sata_base:		equ SystemVariables + 152
 
 ; DW - Starting at offset 256, increments by 2
 cpu_speed:		equ SystemVariables + 256

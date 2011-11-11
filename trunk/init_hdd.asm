@@ -40,7 +40,32 @@ findcontroller_1:
 	cmp ax, 0x0106			; Mass storage device, SATA
 	jne findcontroller
 	sub cl, 1
+	mov dl, 9
+	call os_pci_read_reg		; BAR5 (AHCI Base Address Register)
+	mov [sata_base], eax
+	call os_debug_dump_eax
+	call os_print_newline
+	mov rsi, rax
+	lodsd
+	call os_debug_dump_eax
+	call os_print_newline
+	bt rax, 18
+	jnc legacy_mode_ok
+	push rsi
+	mov rsi, no_sata_legacy
+	call os_print_string
+	pop rsi
+	jmp $
+legacy_mode_ok:
+	mov rdi, rsi
+	lodsd
+	call os_debug_dump_eax
+	call os_print_newline
+	xor eax, eax
+	stosd
 	
+;jmp $
+
 	mov dl, 4			; BAR0
 	call os_pci_read_reg
 	and ax, 0xFFFC			; AX now holds the Base IO Address (clear the low 2 bits)
@@ -240,6 +265,7 @@ readsectors_fail:
 ret
 ; -----------------------------------------------------------------------------
 
+no_sata_legacy: db "SATA Controller only suppports native mode!", 13, 0
 
 ; =============================================================================
 ; EOF
