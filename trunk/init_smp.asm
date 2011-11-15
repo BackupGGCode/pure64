@@ -181,8 +181,22 @@ wait3:
 	cmp rax, rbx
 	jg wait3
 
-; Step 4: Prepare the IOAPIC
-; To be coded...
+; Step 4: Prepare the I/O APIC
+	xor eax, eax
+	mov rcx, 1			; IOAPICVER—IOAPIC VERSION REGISTER
+	call ioapic_reg_read
+	shr rax, 16			; Extract bytes 16-23 (Maximum Redirection Entry)
+	and rax, 0xFF
+	add rax, 1
+	mov rcx, rax
+	mov rax, 0x0000000000010000	; Masked
+maskint:
+	dec rcx
+	call ioapic_entry_write
+	cmp rcx, 0
+	jne maskint
+
+	jmp $
 
 ; Step 5: Finish up
 
@@ -231,6 +245,95 @@ speedtest:
 	mov [0x000B809E], al
 
 ret
+
+
+; -----------------------------------------------------------------------------
+; ioapic_reg_write -- Write to an I/O APIC register
+;  IN:	EAX = Value to write
+;	ECX = Index of register 
+; OUT:	Nothing. All registers preserved
+ioapic_reg_write:
+	push rsi
+	mov rsi, [os_IOAPICAddress]
+	mov dword [rsi], ecx		; Write index to register selector
+	mov dword [rsi + 0x10], eax	; Write data to window register
+	pop rsi
+	ret
+; -----------------------------------------------------------------------------
+
+
+; -----------------------------------------------------------------------------
+; ioapic_reg_read -- Read from an I/O APIC register
+;  IN:	ECX = Index of register 
+; OUT:	EAX = Value of register
+;	All other registers preserved
+ioapic_reg_read:
+	push rsi
+	mov rsi, [os_IOAPICAddress]
+	mov dword [rsi], ecx		; Write index to register selector
+	mov eax, dword [rsi + 0x10]	; Read data from window register
+	pop rsi
+	ret
+; -----------------------------------------------------------------------------
+
+
+; -----------------------------------------------------------------------------
+; ioapic_entry_write -- Write to an I/O APIC entry in the redirection table
+;  IN:	RAX = Data to write to entry
+;	ECX = Index of the entry
+; OUT:	Nothing. All registers preserved
+ioapic_entry_write:
+	push rax
+	push rcx
+
+	; Calculate index for lower DWORD
+	shl rcx, 1				; Quick multiply by 2
+	add rcx, 0x10				; IO Redirection tables start at 0x10
+
+	; Write lower DWORD
+	call ioapic_reg_write
+
+	; Write higher DWORD
+	shr rax, 32
+	add rcx, 1
+	call ioapic_reg_write
+
+	pop rcx
+	pop rax
+	ret
+; -----------------------------------------------------------------------------
+
+
+; -----------------------------------------------------------------------------
+; ioapic_entry_read -- Read an I/O APIC entry from the redirection table
+;  IN:	ECX = Index of the entry
+; OUT:	RAX = Data that was read
+;	All other registers preserved
+ioapic_entry_read:
+	push rbx
+	push rcx
+
+	; Calculate index for lower DWORD
+	shl rcx, 1				; Quick multiply by 2
+	add rcx, 0x10				; IO Redirection tables start at 0x10
+
+	; Read lower DWORD
+	call ioapic_reg_read
+	mov rbx, rax
+
+	; Read higher DWORD
+	add rcx, 1
+	call ioapic_reg_read
+
+	; Combine
+	shr rax, 32
+	or rbx, rax
+	xchg rbx, rax
+
+	pop rcx
+	pop rbx
+	ret
+; -----------------------------------------------------------------------------
 
 
 %include "init_smp_acpi.asm"
