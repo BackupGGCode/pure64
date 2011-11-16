@@ -32,15 +32,14 @@ searchingforACPI:
 	mov [0x000B809E], al
 
 foundACPI:
-	jmp init_smp_acpi 
+	call init_smp_acpi 
 
-makempgonow:
 	mov al, '5'			; ACPI tables parsed
 	mov [0x000B809C], al
 	mov al, '6'
 	mov [0x000B809E], al
 
-; Step 2: Enable Local APIC on BSP
+; Step 2: Enable Local APIC on BSP and configure Timer
 	mov rsi, [os_LocalAPICAddress]
 	cmp rsi, 0x00000000
 	je noMP				; Skip MP init if we didn't get a valid LAPIC address
@@ -49,7 +48,44 @@ makempgonow:
 	lodsd
 	or eax, 0000000100000000b
 	stosd
+	cld				; Clear direction flag
+	xor eax, eax
+	mov rsi, [os_LocalAPICAddress]
+	mov rdi, rsi
+	add rdi, 0x3E0
+	stosd
+	mov eax, 10000			; Countdown from 10000
+	mov rdi, rsi
+	add rdi, 0x380			; Timer: Initial Count
+	stosd
+	mov eax, 0x20			; Timer: interrupt-ID
+	bts eax, 17			; Do a periodic interrupt 
+	mov rdi, rsi
+	add rdi, 0x320			; set APIC Timer's LVT 
+	stosd
 
+; Step 3: Prepare the I/O APIC
+;	xor eax, eax
+;	mov rcx, 1			; Register 1 - IOAPIC VERSION REGISTER
+;	call ioapic_reg_read
+;	shr eax, 16			; Extract bytes 16-23 (Maximum Redirection Entry)
+;	and eax, 0xFF			; Clear bits 16-31
+;	add eax, 1
+;	mov rcx, rax
+;	mov rax, 0x20			; Base IRQ number
+;	bts rax, 16			; Interrupt Mask Enabled
+;initentry:
+;	dec rcx
+;	call ioapic_entry_write
+;	add rax, 1
+;	cmp rcx, 0
+;	jne initentry
+
+xchg bx, bx
+	sti				; Enable interrupts
+
+
+jmp $
 ; Check if we want the AP's to be enabled.. if not then skip to end
 ;	cmp byte [cfg_smpinit], 1	; Check if SMP should be enabled
 ;	jne noMP			; If not then skip SMP init
@@ -181,23 +217,7 @@ wait3:
 	cmp rax, rbx
 	jg wait3
 
-; Step 4: Prepare the I/O APIC
-	xor eax, eax
-	mov rcx, 1			; IOAPICVER—IOAPIC VERSION REGISTER
-	call ioapic_reg_read
-	shr rax, 16			; Extract bytes 16-23 (Maximum Redirection Entry)
-	and rax, 0xFF
-	add rax, 1
-	mov rcx, rax
-	mov rax, 0x0000000000010000	; Masked
-maskint:
-	dec rcx
-	call ioapic_entry_write
-	cmp rcx, 0
-	jne maskint
-
-	jmp $
-
+	
 ; Step 5: Finish up
 
 noMP:
@@ -243,6 +263,8 @@ speedtest:
 	mov [0x000B809C], al
 	mov al, 'E'
 	mov [0x000B809E], al
+	
+	cli				; Disable Interrupts
 
 ret
 

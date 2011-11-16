@@ -476,15 +476,15 @@ make_interrupt_gates: 			; make gates for the other interrupts
 	mov rdi, 0x20			; Set up Timer IRQ handler
 	mov rax, timer
 	call create_gate
-	mov rdi, 0x22			; Set up Cascade IRQ handler
-	mov rax, cascade
-	call create_gate
+;	mov rdi, 0x22			; Set up Cascade IRQ handler
+;	mov rax, cascade
+;	call create_gate
 	mov rdi, 0x28			; Set up RTC IRQ handler
 	mov rax, rtc
 	call create_gate	
 
 	lidt [IDTR64]			; load IDT register
-	sti				; enable interrupts
+;	sti				; enable interrupts
 
 ; Debug
 	mov al, '4'
@@ -570,22 +570,22 @@ clearmapnext:
 ;	call serial_send_64
 
 ; Set PIT Channel 0 to fire at 100Hz (Divisor = 1193180 / hz)
-	mov al, 0x36			; Set Timer
-	out 0x43, al
-	mov al, 0x9B			; We want 100MHz so 0x2E9B
-	out 0x40, al
-	mov al, 0x2E
-	out 0x40, al
+;	mov al, 0x36			; Set Timer
+;	out 0x43, al
+;	mov al, 0x9B			; We want 100MHz so 0x2E9B
+;	out 0x40, al
+;	mov al, 0x2E
+;	out 0x40, al
 
-	cli				; Disable Interrupts
+;	cli				; Disable Interrupts
 
 ; Disable all IRQs
-	in al, 0x21
-	mov al, 11111111b
-	out 0x21, al
-	in al, 0xA1
-	mov al, 11111111b
-	out 0xA1, al
+;	in al, 0x21
+;	mov al, 11111111b
+;	out 0x21, al
+;	in al, 0xA1
+;	mov al, 11111111b
+;	out 0xA1, al
 
 ; Calculate amount of usable RAM from Memory Map
 	xor rcx, rcx

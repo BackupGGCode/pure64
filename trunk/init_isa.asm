@@ -190,12 +190,9 @@ VBEdone:
 	out 0x21, al
 	out 0xA1, al
 
-;	mov al, 'D'
-;	call serial_send_16
-
-	mov al, 11111010b		; Enable Timer
+	; Mask all PIC interrupts
+	mov al, 0xFF
 	out 0x21, al
-	mov al, 11111110b
 	out 0xA1, al
 
 ;	mov al, 'E'
