@@ -43,7 +43,7 @@ timer:
 	add al, 48
 	mov [0x000B808E], al
 
-	mov rdi, [os_LocalAPICAddress]
+	mov rdi, [os_LocalAPICAddress]	; Acknowledge the IRQ on APIC
 	add rdi, 0xB0
 	xor eax, eax
 	stosd
@@ -51,18 +51,6 @@ timer:
 	pop rax
 	pop rdi
 	iretq
-; -----------------------------------------------------------------------------
-
-
-; -----------------------------------------------------------------------------
-; Cascade interrupt. IRQ 0x02, INT 0x22
-;align 16
-;cascade:
-;	push rax
-;	mov al, 0x20			; Acknowledge the IRQ
-;	out 0x20, al
-;	pop rax
-;	iretq
 ; -----------------------------------------------------------------------------
 
 
@@ -85,9 +73,10 @@ rtc:
 	out 0x70, al			; Port 0x70 is the RTC index, and 0x71 is the RTC data
 	in al, 0x71			; Read the value in register C
 
-;	mov al, 0x20			; Acknowledge the IRQ on the PICs
-;	out 0xA0, al
-;	out 0x20, al
+	mov rdi, [os_LocalAPICAddress]	; Acknowledge the IRQ on APIC
+	add rdi, 0xB0
+	xor eax, eax
+	stosd
 
 	pop rax
 	pop rdi

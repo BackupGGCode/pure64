@@ -65,32 +65,40 @@ foundACPI:
 	stosd
 
 ; Step 3: Prepare the I/O APIC
-;	xor eax, eax
-;	mov rcx, 1			; Register 1 - IOAPIC VERSION REGISTER
-;	call ioapic_reg_read
-;	shr eax, 16			; Extract bytes 16-23 (Maximum Redirection Entry)
-;	and eax, 0xFF			; Clear bits 16-31
-;	add eax, 1
-;	mov rcx, rax
-;	mov rax, 0x20			; Base IRQ number
-;	bts rax, 16			; Interrupt Mask Enabled
-;initentry:
-;	dec rcx
-;	call ioapic_entry_write
-;	add rax, 1
-;	cmp rcx, 0
-;	jne initentry
+	xor eax, eax
+	mov rcx, 1			; Register 1 - IOAPIC VERSION REGISTER
+	call ioapic_reg_read
+	shr eax, 16			; Extract bytes 16-23 (Maximum Redirection Entry)
+	and eax, 0xFF			; Clear bits 16-31
+	add eax, 1
+	mov rcx, rax
+	xor rax, rax
+	bts rax, 16			; Interrupt Mask Enabled
+	bts rax, 13			; Interrupt Input Pin Polarity
+initentry:
+	dec rcx
+	xchg bx, bx
+	call ioapic_entry_write
+	cmp rcx, 0
+	jne initentry
 
-xchg bx, bx
+	; Enable the Timer
+	mov rcx, 0
+	mov rax, 0x20
+	call ioapic_entry_write
+
+	; Enable the RTC
+	mov rcx, 8
+	mov rax, 0x28
+	call ioapic_entry_write
+
 	sti				; Enable interrupts
 
-
-jmp $
 ; Check if we want the AP's to be enabled.. if not then skip to end
 ;	cmp byte [cfg_smpinit], 1	; Check if SMP should be enabled
 ;	jne noMP			; If not then skip SMP init
 
-; Step 3: Start the AP's one by one
+; Step 4: Start the AP's one by one
 	xor eax, eax
 	xor ecx, ecx
 	xor edx, edx
@@ -124,7 +132,7 @@ smp_send_INIT:
 	cmp cl, dl		; Is it the BSP?
 	je smp_send_INIT_skipcore
 
-; Broadcast 'INIT' IPI to APIC ID in AL
+	; Broadcast 'INIT' IPI to APIC ID in AL
 	mov al, cl
 	shl eax, 24
 	mov rdi, [os_LocalAPICAddress]
@@ -177,7 +185,7 @@ smp_send_SIPI:
 	cmp cl, dl		; Is it the BSP?
 	je smp_send_SIPI_skipcore
 
-; Broadcast 'Startup' IPI to destination using vector 0x08 to specify entry-point is at the memory-address 0x00008000
+	; Broadcast 'Startup' IPI to destination using vector 0x08 to specify entry-point is at the memory-address 0x00008000
 	mov al, cl
 	shl eax, 24
 	mov rdi, [os_LocalAPICAddress]
