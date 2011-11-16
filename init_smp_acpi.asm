@@ -157,7 +157,7 @@ APICignore:
 	jmp readAPICstructures		; Read the next structure
 
 init_smp_acpi_done:
-	jmp makempgonow
+	ret
 
 novalidacpi:
 	mov al, 'X'
