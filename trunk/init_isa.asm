@@ -84,17 +84,6 @@ check_A20:
 	mov al, 0xDF
 	out 0x60, al
 
-;	mov al, '3'
-;	call serial_send_16
-
-; Set PIT Channel 0 to fire at 1000Hz (Divisor = 1193180 / hz)
-	mov al, 00110110b		; Set Timer - Channel 0, lobyte/highbyte, square wave, binary
-	out 0x43, al
-	mov al, 0xA9			; We want 1000MHz so 0x04A9
-	out 0x40, al
-	mov al, 0x04
-	out 0x40, al
-
 ;	mov al, '4'
 ;	call serial_send_16
 
@@ -113,15 +102,16 @@ check_A20:
 
 ; Set up RTC
 ; Port 0x70 is RTC Address, and 0x71 is RTC Data
+; http://www.nondot.org/sabre/os/files/MiscHW/RealtimeClockFAQ.txt
 rtc_poll:
 	mov al, 0x0A			; Status Register A
 	out 0x70, al
 	in al, 0x71
 	test al, 0x80			; Is there an update in process?
 	jne rtc_poll			; If so then keep polling
-	mov al, 0x0A
+	mov al, 0x0A			; Status Register A
 	out 0x70, al
-	mov al, 00101101b		; RTC@32.768KHz (0010), Rate@8Hz (1101)
+	mov al, 00101101b		; UIP (0), RTC@32.768KHz (010), Rate@1024Hz (0110)
 	out 0x71, al
 	mov al, 0x0B			; Status Register B
 	out 0x70, al
@@ -170,25 +160,6 @@ VBEdone:
 
 ;	mov al, 'C'
 ;	call serial_send_16
-
-; Remap IRQ's
-; As heard on an episode of Jerry Springer.. "It's time to lose the zero (8259 PIC) and get with a hero (IOAPIC)".
-; http://osdever.net/tutorials/apicarticle.php
-	mov al, 00010001b		; begin PIC 1 initialization
-	out 0x20, al
-	mov al, 00010001b		; begin PIC 2 initialization
-	out 0xA0, al
-	mov al, 0x20			; IRQ 0-7: interrupts 20h-27h
-	out 0x21, al
-	mov al, 0x28			; IRQ 8-15: interrupts 28h-2Fh
-	out 0xA1, al
-	mov al, 4
-	out 0x21, al
-	mov al, 2
-	out 0xA1, al
-	mov al, 1
-	out 0x21, al
-	out 0xA1, al
 
 	; Mask all PIC interrupts
 	mov al, 0xFF
