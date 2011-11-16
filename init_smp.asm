@@ -74,10 +74,8 @@ foundACPI:
 	mov rcx, rax
 	xor rax, rax
 	bts rax, 16			; Interrupt Mask Enabled
-	bts rax, 13			; Interrupt Input Pin Polarity
 initentry:
 	dec rcx
-	xchg bx, bx
 	call ioapic_entry_write
 	cmp rcx, 0
 	jne initentry
@@ -93,7 +91,7 @@ initentry:
 	call ioapic_entry_write
 
 	sti				; Enable interrupts
-
+jmp $
 ; Check if we want the AP's to be enabled.. if not then skip to end
 ;	cmp byte [cfg_smpinit], 1	; Check if SMP should be enabled
 ;	jne noMP			; If not then skip SMP init
