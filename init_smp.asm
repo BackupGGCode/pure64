@@ -48,21 +48,21 @@ foundACPI:
 	lodsd
 	or eax, 0000000100000000b
 	stosd
-	cld				; Clear direction flag
-	xor eax, eax
-	mov rsi, [os_LocalAPICAddress]
-	mov rdi, rsi
-	add rdi, 0x3E0
-	stosd
-	mov eax, 10000			; Countdown from 10000
-	mov rdi, rsi
-	add rdi, 0x380			; Timer: Initial Count
-	stosd
-	mov eax, 0x20			; Timer: interrupt-ID
-	bts eax, 17			; Do a periodic interrupt 
-	mov rdi, rsi
-	add rdi, 0x320			; set APIC Timer's LVT 
-	stosd
+;	cld				; Clear direction flag
+;	xor eax, eax
+;	mov rsi, [os_LocalAPICAddress]
+;	mov rdi, rsi
+;	add rdi, 0x3E0
+;	stosd
+;	mov eax, 10000			; Countdown from 10000
+;	mov rdi, rsi
+;	add rdi, 0x380			; Timer: Initial Count
+;	stosd
+;	mov eax, 0x20			; Timer: interrupt-ID
+;	bts eax, 17			; Do a periodic interrupt 
+;	mov rdi, rsi
+;	add rdi, 0x320			; set APIC Timer's LVT 
+;	stosd
 
 ; Step 3: Prepare the I/O APIC
 	xor eax, eax
@@ -81,9 +81,9 @@ initentry:
 	jne initentry
 
 	; Enable the Timer
-	mov rcx, 0
-	mov rax, 0x20
-	call ioapic_entry_write
+;	mov rcx, 0
+;	mov rax, 0x20
+;	call ioapic_entry_write
 
 	; Enable the RTC
 	mov rcx, 8
@@ -91,7 +91,7 @@ initentry:
 	call ioapic_entry_write
 
 	sti				; Enable interrupts
-jmp $
+
 ; Check if we want the AP's to be enabled.. if not then skip to end
 ;	cmp byte [cfg_smpinit], 1	; Check if SMP should be enabled
 ;	jne noMP			; If not then skip SMP init
@@ -155,10 +155,10 @@ smp_send_INIT_skipcore:
 
 smp_send_INIT_done:
 
-	mov rax, [os_Counter_Timer]
+	mov rax, [os_Counter_RTC]
 	add rax, 10
 wait1:
-	mov rbx, [os_Counter_Timer]
+	mov rbx, [os_Counter_RTC]
 	cmp rax, rbx
 	jg wait1
 ;	mov al, 'i'
@@ -207,7 +207,7 @@ smp_send_SIPI_skipcore:
 	jmp smp_send_SIPI	
 
 smp_send_SIPI_done:
-done:
+
 	mov al, '5'
 	mov [0x000B809C], al
 	mov al, 'A'
@@ -216,16 +216,14 @@ done:
 ;	call serial_send_64	
 
 ; Let things settle (Give the AP's some time to finish)
-	mov rax, [os_Counter_Timer]
+	mov rax, [os_Counter_RTC]
 	add rax, 10
 wait3:
-	mov rbx, [os_Counter_Timer]
+	mov rbx, [os_Counter_RTC]
 	cmp rax, rbx
 	jg wait3
 
-	
 ; Step 5: Finish up
-
 noMP:
 	lock
 	inc word [cpu_activated]	; BSP adds one here
@@ -245,23 +243,23 @@ noMP:
 	mov al, 'C'
 	mov [0x000B809E], al
 
-; Calculate speed of CPU (At this point the timer is firing at 1000Hz)
+; Calculate speed of CPU (At this point the RTC is firing at 1024Hz)
 	cpuid
 	xor edx, edx
 	xor eax, eax
-	mov rcx, [os_Counter_Timer]
+	mov rcx, [os_Counter_RTC]
 	add rcx, 10
 	rdtsc
 	push rax
 speedtest:
-	mov rbx, [os_Counter_Timer]
+	mov rbx, [os_Counter_RTC]
 	cmp rbx, rcx
 	jl speedtest
 	rdtsc
 	pop rdx
 	sub rax, rdx
 	xor edx, edx
-	mov rcx, 10000
+	mov rcx, 10240
 	div rcx
 	mov [cpu_speed], ax
 
