@@ -39,7 +39,7 @@ foundACPI:
 	mov al, '6'
 	mov [0x000B809E], al
 
-; Step 2: Enable Local APIC on BSP and configure Timer
+; Step 2: Enable Local APIC on BSP
 	mov rsi, [os_LocalAPICAddress]
 	cmp rsi, 0x00000000
 	je noMP				; Skip MP init if we didn't get a valid LAPIC address
@@ -48,21 +48,6 @@ foundACPI:
 	lodsd
 	or eax, 0000000100000000b
 	stosd
-;	cld				; Clear direction flag
-;	xor eax, eax
-;	mov rsi, [os_LocalAPICAddress]
-;	mov rdi, rsi
-;	add rdi, 0x3E0
-;	stosd
-;	mov eax, 10000			; Countdown from 10000
-;	mov rdi, rsi
-;	add rdi, 0x380			; Timer: Initial Count
-;	stosd
-;	mov eax, 0x20			; Timer: interrupt-ID
-;	bts eax, 17			; Do a periodic interrupt 
-;	mov rdi, rsi
-;	add rdi, 0x320			; set APIC Timer's LVT 
-;	stosd
 
 ; Step 3: Prepare the I/O APIC
 	xor eax, eax
@@ -74,20 +59,15 @@ foundACPI:
 	mov rcx, rax
 	xor rax, rax
 	bts rax, 16			; Interrupt Mask Enabled
-initentry:
+initentry:				; Initialize all entries 1:1
 	dec rcx
 	call ioapic_entry_write
 	cmp rcx, 0
 	jne initentry
 
-	; Enable the Timer
-;	mov rcx, 0
-;	mov rax, 0x20
-;	call ioapic_entry_write
-
 	; Enable the RTC
-	mov rcx, 8
-	mov rax, 0x28
+	mov rcx, 8			; IRQ value
+	mov rax, 0x28			; Interrupt value
 	call ioapic_entry_write
 
 	sti				; Enable interrupts
