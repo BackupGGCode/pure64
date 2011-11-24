@@ -95,7 +95,7 @@ foundAPICTable:
 	jne fixstack
 
 	lodsd				; Length of MADT in bytes
-	mov ecx, eax
+	mov ecx, eax			; Store the length in ECX
 	xor ebx, ebx
 	lodsb				; Revision
 	lodsb				; Checksum
@@ -116,10 +116,12 @@ readAPICstructures:
 	cmp ebx, ecx
 	jge init_smp_acpi_done
 	lodsb				; APIC Structure Type
-	cmp al, 0
+	cmp al, 0			; Processor Local APIC
 	je APICcpu
-	cmp al, 1
+	cmp al, 1			; I/O APIC
 	je APICioapic
+	cmp al, 2			; Interrupt Source Override
+	je APICinterruptsourceoverride
 	jmp APICignore
 
 APICcpu:
@@ -146,6 +148,16 @@ APICioapic:
 	lodsd				; IO APIC Address
 	mov [os_IOAPICAddress], rax
 	lodsd				; System Vector Base
+	jmp readAPICstructures		; Read the next structure
+
+APICinterruptsourceoverride:
+	xor eax, eax
+	lodsb				; Length (will be set to 10)
+	add ebx, eax
+	lodsb				; Bus
+	lodsb				; Source
+	lodsd				; Global System Interrupt
+	lodsw				; Flags
 	jmp readAPICstructures		; Read the next structure
 
 APICignore:
