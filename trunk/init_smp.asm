@@ -43,11 +43,54 @@ foundACPI:
 	mov rsi, [os_LocalAPICAddress]
 	cmp rsi, 0x00000000
 	je noMP				; Skip MP init if we didn't get a valid LAPIC address
-	add rsi, 0xf0			; Offset to Spurious Interrupt Register
-	mov rdi, rsi
-	lodsd
-	or eax, 0000000100000000b
-	stosd
+	
+;	mov ecx, 0x0000001B		; IA32_APIC_BASE MSR
+;	rdmsr				; Test bit 11
+;	call os_debug_dump_eax
+
+	mov eax, dword [rsi+0x80]	; Task Priority Register (TPR)
+	mov al, 0			; Clear Task Priority (bits 7:4) and Task Priority Sub-Class (bits 3:0)
+	mov dword [rsi+0x80], eax
+
+	mov eax, dword [rsi+0xE0]	; Destination Format Register
+	or eax, 0xF0000000		; Set bits 31-28 for Flat Mode
+	mov dword [rsi+0xE0], eax
+
+	mov eax, dword [rsi+0xF0]	; Spurious Interrupt Register
+	mov al, 0
+	bts eax, 8			; Enable APIC (Set bit 8)
+	bts eax, 12			;bit12: EOI-Broadcast Suppression (0==Enabled, 1== Disabled)
+	bts eax, 9			;bit9: Focus Processor Checking (0==Enabled 1==Disabled)
+	mov dword [rsi+0xF0], eax
+
+	mov eax, dword [rsi+0x320]	; LVT Timer Register
+	bts eax, 16			;bit16:Mask interrupts (0==Unmasked, 1== Masked)
+	mov dword [rsi+0x320], eax
+
+	mov eax, dword [rsi+0x350]	; LVT LINT0 Register
+	mov al, 0			;Set interrupt vector (bits 7:0)
+	bts eax, 8			;Delivery Mode (111b==ExtlNT] (bits 10:8)
+	bts eax, 9
+	bts eax, 10
+	bts eax, 15			;bit15:Set trigger mode to Level (0== Edge, 1== Level)  
+	btr eax, 16			;bit16:unmask interrupts (0==Unmasked, 1== Masked)
+	mov dword [rsi+0x350], eax
+
+	mov eax, dword [rsi+0x360]	; LVT LINT1 Register
+	mov al, 0			;Set interrupt vector (bits 7:0)
+	bts eax, 8			;Delivery Mode (111b==ExtlNT] (bits 10:8)
+	bts eax, 9
+	bts eax, 10
+	bts eax, 15			;bit15:Set trigger mode to Edge (0== Edge, 1== Level)
+	btr eax, 16			;bit16:unmask interrupts (0==Unmasked, 1== Masked)
+	mov dword [rsi+0x360], eax
+
+	mov eax, dword [rsi+0x370]	; LVT Error Register
+	mov al, 0			;Set interrupt vector (bits 7:0)
+	bts eax, 16			;bit16:Mask interrupts (0==Unmasked, 1== Masked)
+	mov dword [rsi+0x370], eax
+
+
 
 ; Step 3: Prepare the I/O APIC
 	xor eax, eax
@@ -65,13 +108,18 @@ initentry:				; Initialize all entries 1:1
 	cmp rcx, 0
 	jne initentry
 
+	; Enable the Timer
+	mov rcx, 2
+	mov rax, 0x20
+	call ioapic_entry_write
+
 	; Enable the RTC
 	mov rcx, 8			; IRQ value
 	mov rax, 0x28			; Interrupt value
 	call ioapic_entry_write
 
 	sti				; Enable interrupts
-
+jmp $
 ; Check if we want the AP's to be enabled.. if not then skip to end
 ;	cmp byte [cfg_smpinit], 1	; Check if SMP should be enabled
 ;	jne noMP			; If not then skip SMP init

@@ -116,6 +116,8 @@ readAPICstructures:
 	cmp ebx, ecx
 	jge init_smp_acpi_done
 	lodsb				; APIC Structure Type
+;	call os_print_newline
+;	call os_debug_dump_rax
 	cmp al, 0			; Processor Local APIC
 	je APICcpu
 	cmp al, 1			; I/O APIC
@@ -146,6 +148,8 @@ APICioapic:
 	lodsb				; Reserved
 	xor eax, eax
 	lodsd				; IO APIC Address
+;	call os_print_newline
+;	call os_debug_dump_eax
 	mov [os_IOAPICAddress], rax
 	lodsd				; System Vector Base
 	jmp readAPICstructures		; Read the next structure
@@ -156,7 +160,12 @@ APICinterruptsourceoverride:
 	add ebx, eax
 	lodsb				; Bus
 	lodsb				; Source
+;	call os_print_newline
+;	call os_debug_dump_al
+;	mov al, ' '
+;	call os_print_char
 	lodsd				; Global System Interrupt
+;	call os_debug_dump_eax
 	lodsw				; Flags
 	jmp readAPICstructures		; Read the next structure
 
