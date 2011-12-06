@@ -476,9 +476,6 @@ make_interrupt_gates: 			; make gates for the other interrupts
 	mov rdi, 0x20			; Set up Timer IRQ handler
 	mov rax, timer
 	call create_gate
-;	mov rdi, 0x22			; Set up Cascade IRQ handler
-;	mov rax, cascade
-;	call create_gate
 	mov rdi, 0x28			; Set up RTC IRQ handler
 	mov rax, rtc
 	call create_gate	

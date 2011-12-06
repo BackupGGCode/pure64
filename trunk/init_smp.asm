@@ -57,7 +57,7 @@ foundACPI:
 	mov dword [rsi+0xE0], eax
 
 	mov eax, dword [rsi+0xF0]	; Spurious Interrupt Register
-	mov al, 0
+	mov al, 0xF8
 	bts eax, 8			; Enable APIC (Set bit 8)
 	bts eax, 12			;bit12: EOI-Broadcast Suppression (0==Enabled, 1== Disabled)
 	bts eax, 9			;bit9: Focus Processor Checking (0==Enabled 1==Disabled)
@@ -89,8 +89,6 @@ foundACPI:
 	mov al, 0			;Set interrupt vector (bits 7:0)
 	bts eax, 16			;bit16:Mask interrupts (0==Unmasked, 1== Masked)
 	mov dword [rsi+0x370], eax
-
-
 
 ; Step 3: Prepare the I/O APIC
 	xor eax, eax

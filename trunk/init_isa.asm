@@ -100,6 +100,14 @@ check_A20:
 ;	mov al, '5'
 ;	call serial_send_16
 
+; Set PIT Channel 0 to fire at 1000Hz (Divisor = 1193180 / hz)
+	mov al, 00110110b		; Set Timer - Channel 0, lobyte/highbyte, square wave, binary
+	out 0x43, al
+	mov al, 0xA9			; We want 1000MHz so 0x04A9
+	out 0x40, al
+	mov al, 0x04
+	out 0x40, al
+
 ; Set up RTC
 ; Port 0x70 is RTC Address, and 0x71 is RTC Data
 ; http://www.nondot.org/sabre/os/files/MiscHW/RealtimeClockFAQ.txt
