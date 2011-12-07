@@ -63,6 +63,9 @@ foundACPI:
 	bts eax, 9			;bit9: Focus Processor Checking (0==Enabled 1==Disabled)
 	mov dword [rsi+0xF0], eax
 
+	xor eax, eax
+	mov dword [rsi+0x280], eax	; Error Status Register
+
 	mov eax, dword [rsi+0x320]	; LVT Timer Register
 	bts eax, 16			;bit16:Mask interrupts (0==Unmasked, 1== Masked)
 	mov dword [rsi+0x320], eax
@@ -117,7 +120,7 @@ initentry:				; Initialize all entries 1:1
 	call ioapic_entry_write
 
 	sti				; Enable interrupts
-jmp $
+
 ; Check if we want the AP's to be enabled.. if not then skip to end
 ;	cmp byte [cfg_smpinit], 1	; Check if SMP should be enabled
 ;	jne noMP			; If not then skip SMP init
@@ -157,23 +160,16 @@ smp_send_INIT:
 	je smp_send_INIT_skipcore
 
 	; Broadcast 'INIT' IPI to APIC ID in AL
+	mov rdi, [os_LocalAPICAddress]
 	mov al, cl
 	shl eax, 24
-	mov rdi, [os_LocalAPICAddress]
-	add rdi, 0x310
-	stosd
+	mov dword [rdi+0x310], eax		; Interrupt Command Register (ICR); bits 63-32
 	mov eax, 0x00004500
-	mov rdi, [os_LocalAPICAddress]
-	add rdi, 0x300
-	stosd
-	push rsi
+	mov dword [rdi+0x300], eax		; Interrupt Command Register (ICR); bits 31-0
 smp_send_INIT_verify:
-	mov rsi, [os_LocalAPICAddress]
-	add rsi, 0x300
-	lodsd
-	bt eax, 12			; Verify that the command completed
+	mov eax, [rdi+0x300]			; Interrupt Command Register (ICR); bits 31-0
+	bt eax, 12				; Verify that the command completed
 	jc smp_send_INIT_verify
-	pop rsi
 
 smp_send_INIT_skipcore:
 	inc cl
@@ -196,37 +192,30 @@ smp_send_SIPI:
 	cmp rsi, 0x0000000000005900
 	je smp_send_SIPI_done
 	lodsb
-	cmp al, 1		; Is it enabled?
+	cmp al, 1				; Is it enabled?
 	jne smp_send_SIPI_skipcore
 
-;	push rax		; Debug - display APIC ID
+;	push rax				; Debug - display APIC ID
 ;	mov al, cl
 ;	add al, 48
 ;	call os_print_char
 ;	call serial_send_64
 ;	pop rax
 
-	cmp cl, dl		; Is it the BSP?
+	cmp cl, dl				; Is it the BSP?
 	je smp_send_SIPI_skipcore
 
 	; Broadcast 'Startup' IPI to destination using vector 0x08 to specify entry-point is at the memory-address 0x00008000
+	mov rdi, [os_LocalAPICAddress]
 	mov al, cl
 	shl eax, 24
-	mov rdi, [os_LocalAPICAddress]
-	add rdi, 0x310
-	stosd
-	mov eax, 0x00004608		; Vector 0x08
-	mov rdi, [os_LocalAPICAddress]
-	add rdi, 0x300
-	stosd
-	push rsi
+	mov dword [rdi+0x310], eax		; Interrupt Command Register (ICR); bits 63-32
+	mov eax, 0x00004608			; Vector 0x08
+	mov dword [rdi+0x300], eax		; Interrupt Command Register (ICR); bits 31-0
 smp_send_SIPI_verify:
-	mov rsi, [os_LocalAPICAddress]
-	add rsi, 0x300
-	lodsd
-	bt eax, 12			; Verify that the command completed
+	mov eax, [rdi+0x300]			; Interrupt Command Register (ICR); bits 31-0
+	bt eax, 12				; Verify that the command completed
 	jc smp_send_SIPI_verify
-	pop rsi
 
 smp_send_SIPI_skipcore:
 	inc cl
