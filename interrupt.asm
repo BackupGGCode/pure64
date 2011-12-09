@@ -53,6 +53,37 @@ timer:
 	iretq
 ; -----------------------------------------------------------------------------
 
+
+; -----------------------------------------------------------------------------
+; Keyboard interrupt. IRQ 0x01, INT 0x21
+; This IRQ runs whenever there is input on the keyboard
+align 16
+keyboard:
+	push rdi
+	push rax
+
+	xor rax, rax
+
+	in al, 0x60			; Get the scancode from the keyboard
+	test al, 0x80
+	jz keydown
+	jmp keyboard_done
+
+keydown:
+	mov [0x000B8088], al		; Dump the scancode to the screen
+
+keyboard_done:
+	mov rdi, [os_LocalAPICAddress]	; Acknowledge the IRQ on APIC
+	add rdi, 0xB0
+	xor eax, eax
+	stosd
+
+	pop rax
+	pop rdi
+	iretq
+; -----------------------------------------------------------------------------
+
+
 ; -----------------------------------------------------------------------------
 ; Real-time clock interrupt. IRQ 0x08, INT 0x28
 align 16

@@ -61,6 +61,7 @@ memtempstring:		equ SystemVariables + 390
 speedtempstring:	equ SystemVariables + 400
 cpu_amount_string:	equ SystemVariables + 410
 hdtempstring:		equ SystemVariables + 420
+os_key:			equ SystemVariables + 421
 
 ;MISC
 screen_cols:		db 80

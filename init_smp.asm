@@ -110,6 +110,11 @@ initentry:				; Initialize all entries 1:1
 	jne initentry
 
 	; Enable the Timer
+	mov rcx, 1
+	mov rax, 0x21
+	call ioapic_entry_write
+
+	; Enable the Timer
 	mov rcx, 2
 	mov rax, 0x20
 	call ioapic_entry_write
@@ -120,7 +125,7 @@ initentry:				; Initialize all entries 1:1
 	call ioapic_entry_write
 
 	sti				; Enable interrupts
-
+jmp $
 ; Check if we want the AP's to be enabled.. if not then skip to end
 ;	cmp byte [cfg_smpinit], 1	; Check if SMP should be enabled
 ;	jne noMP			; If not then skip SMP init

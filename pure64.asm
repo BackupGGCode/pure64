@@ -476,6 +476,9 @@ make_interrupt_gates: 			; make gates for the other interrupts
 	mov rdi, 0x20			; Set up Timer IRQ handler
 	mov rax, timer
 	call create_gate
+	mov rdi, 0x21			; Set up Keyboard IRQ handler
+	mov rax, keyboard
+	call create_gate
 	mov rdi, 0x28			; Set up RTC IRQ handler
 	mov rax, rtc
 	call create_gate	
@@ -838,7 +841,7 @@ nokernel:
 %include "sysvar.asm"
 
 ; Pad to an even KB file (6 KiB)
-times 7168-($-$$) db 0x90
+;times 7168-($-$$) db 0x90
 
 ; =============================================================================
 ; EOF
