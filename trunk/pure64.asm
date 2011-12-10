@@ -481,7 +481,10 @@ make_interrupt_gates: 			; make gates for the other interrupts
 	call create_gate
 	mov rdi, 0x28			; Set up RTC IRQ handler
 	mov rax, rtc
-	call create_gate	
+	call create_gate
+	mov rdi, 0xF8			; Set up Spurious handler
+	mov rax, spurious
+	call create_gate
 
 	lidt [IDTR64]			; load IDT register
 ;	sti				; enable interrupts
