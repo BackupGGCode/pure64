@@ -29,28 +29,28 @@ interrupt_gate:				; handler for all other interrupts
 
 ; -----------------------------------------------------------------------------
 ; Timer interrupt. IRQ 0x00, INT 0x20
-align 16
-timer:
-	push rdi
-	push rax
-
-	add qword [os_Counter_Timer], 1	; 64-bit counter started at bootup
-
-	mov al, 'T'
-	mov [0x000B808C], al
-	mov rax, [os_Counter_Timer]
-	and al, 1			; Clear all but lowest bit (Can only be 0 or 1)
-	add al, 48
-	mov [0x000B808E], al
-
-	mov rdi, [os_LocalAPICAddress]	; Acknowledge the IRQ on APIC
-	add rdi, 0xB0
-	xor eax, eax
-	stosd
-
-	pop rax
-	pop rdi
-	iretq
+;align 16
+;timer:
+;	push rdi
+;	push rax
+;
+;	add qword [os_Counter_Timer], 1	; 64-bit counter started at bootup
+;
+;	mov al, 'T'
+;	mov [0x000B808C], al
+;	mov rax, [os_Counter_Timer]
+;	and al, 1			; Clear all but lowest bit (Can only be 0 or 1)
+;	add al, 48
+;	mov [0x000B808E], al
+;
+;	mov rdi, [os_LocalAPICAddress]	; Acknowledge the IRQ on APIC
+;	add rdi, 0xB0
+;	xor eax, eax
+;	stosd
+;
+;	pop rax
+;	pop rdi
+;	iretq
 ; -----------------------------------------------------------------------------
 
 
@@ -71,6 +71,10 @@ keyboard:
 
 keydown:
 	mov [0x000B8088], al		; Dump the scancode to the screen
+
+	mov rax, [os_Counter_RTC]
+	add rax, 10
+	mov [os_Counter_RTC], rax
 
 keyboard_done:
 	mov rdi, [os_LocalAPICAddress]	; Acknowledge the IRQ on APIC
@@ -115,7 +119,7 @@ rtc:
 
 
 ; -----------------------------------------------------------------------------
-; Spurious interrupt. INT 0xF8
+; Spurious interrupt. INT 0xFF
 align 16
 spurious:				; handler for spurious interrupts
 	mov al, 'S'

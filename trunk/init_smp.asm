@@ -61,7 +61,7 @@ foundACPI:
 	mov dword [rsi+0xE0], eax
 
 	mov eax, dword [rsi+0xF0]	; Spurious Interrupt Register
-	mov al, 0xF8
+	mov al, 0xFF
 	bts eax, 8			; Enable APIC (Set bit 8)
 	mov dword [rsi+0xF0], eax
 
@@ -120,9 +120,9 @@ initentry:				; Initialize all entries 1:1
 	call ioapic_entry_write
 
 	; Enable the Timer
-	mov rcx, 2
-	mov rax, 0x20
-	call ioapic_entry_write
+;	mov rcx, 2
+;	mov rax, 0x20
+;	call ioapic_entry_write
 
 	; Enable the RTC
 	mov rcx, 8			; IRQ value
@@ -242,7 +242,7 @@ smp_send_SIPI_done:
 
 ; Let things settle (Give the AP's some time to finish)
 	mov rax, [os_Counter_RTC]
-	add rax, 10
+	add rax, 20
 wait3:
 	mov rbx, [os_Counter_RTC]
 	cmp rax, rbx
