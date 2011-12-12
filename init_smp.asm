@@ -126,8 +126,6 @@ initentry:				; Initialize all entries 1:1
 
 	sti				; Enable interrupts
 
-	jmp $ ; DEBUG!
-
 ; Check if we want the AP's to be enabled.. if not then skip to end
 ;	cmp byte [cfg_smpinit], 1	; Check if SMP should be enabled
 ;	jne noMP			; If not then skip SMP init
