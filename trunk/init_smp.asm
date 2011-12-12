@@ -52,6 +52,10 @@ foundACPI:
 	mov al, 0			; Clear Task Priority (bits 7:4) and Task Priority Sub-Class (bits 3:0)
 	mov dword [rsi+0x80], eax
 
+	mov eax, dword [rsi+0xD0]	; Logical Destination Register
+	and eax, 0x00FFFFFF
+	mov dword [rsi+0xD0], eax
+
 	mov eax, dword [rsi+0xE0]	; Destination Format Register
 	or eax, 0xF0000000		; Set bits 31-28 for Flat Mode
 	mov dword [rsi+0xE0], eax
@@ -59,8 +63,6 @@ foundACPI:
 	mov eax, dword [rsi+0xF0]	; Spurious Interrupt Register
 	mov al, 0xF8
 	bts eax, 8			; Enable APIC (Set bit 8)
-	bts eax, 12			;bit12: EOI-Broadcast Suppression (0==Enabled, 1== Disabled)
-	bts eax, 9			;bit9: Focus Processor Checking (0==Enabled 1==Disabled)
 	mov dword [rsi+0xF0], eax
 
 	xor eax, eax
@@ -70,28 +72,28 @@ foundACPI:
 	bts eax, 16			;bit16:Mask interrupts (0==Unmasked, 1== Masked)
 	mov dword [rsi+0x320], eax
 
-	mov eax, dword [rsi+0x350]	; LVT LINT0 Register
-	mov al, 0			;Set interrupt vector (bits 7:0)
-	bts eax, 8			;Delivery Mode (111b==ExtlNT] (bits 10:8)
-	bts eax, 9
-	bts eax, 10
-	bts eax, 15			;bit15:Set trigger mode to Level (0== Edge, 1== Level)  
-	btr eax, 16			;bit16:unmask interrupts (0==Unmasked, 1== Masked)
-	mov dword [rsi+0x350], eax
+;	mov eax, dword [rsi+0x350]	; LVT LINT0 Register
+;	mov al, 0			;Set interrupt vector (bits 7:0)
+;	bts eax, 8			;Delivery Mode (111b==ExtlNT] (bits 10:8)
+;	bts eax, 9
+;	bts eax, 10
+;	bts eax, 15			;bit15:Set trigger mode to Level (0== Edge, 1== Level)  
+;	btr eax, 16			;bit16:unmask interrupts (0==Unmasked, 1== Masked)
+;	mov dword [rsi+0x350], eax
 
-	mov eax, dword [rsi+0x360]	; LVT LINT1 Register
-	mov al, 0			;Set interrupt vector (bits 7:0)
-	bts eax, 8			;Delivery Mode (111b==ExtlNT] (bits 10:8)
-	bts eax, 9
-	bts eax, 10
-	bts eax, 15			;bit15:Set trigger mode to Edge (0== Edge, 1== Level)
-	btr eax, 16			;bit16:unmask interrupts (0==Unmasked, 1== Masked)
-	mov dword [rsi+0x360], eax
+;	mov eax, dword [rsi+0x360]	; LVT LINT1 Register
+;	mov al, 0			;Set interrupt vector (bits 7:0)
+;	bts eax, 8			;Delivery Mode (111b==ExtlNT] (bits 10:8)
+;	bts eax, 9
+;	bts eax, 10
+;	bts eax, 15			;bit15:Set trigger mode to Edge (0== Edge, 1== Level)
+;	btr eax, 16			;bit16:unmask interrupts (0==Unmasked, 1== Masked)
+;	mov dword [rsi+0x360], eax
 
-	mov eax, dword [rsi+0x370]	; LVT Error Register
-	mov al, 0			;Set interrupt vector (bits 7:0)
-	bts eax, 16			;bit16:Mask interrupts (0==Unmasked, 1== Masked)
-	mov dword [rsi+0x370], eax
+;	mov eax, dword [rsi+0x370]	; LVT Error Register
+;	mov al, 0			;Set interrupt vector (bits 7:0)
+;	bts eax, 16			;bit16:Mask interrupts (0==Unmasked, 1== Masked)
+;	mov dword [rsi+0x370], eax
 
 ; Step 3: Prepare the I/O APIC
 	xor eax, eax
@@ -102,6 +104,9 @@ foundACPI:
 	add eax, 1
 	mov rcx, rax
 	xor rax, rax
+	mov eax, dword [rsi+0x20]	; Grab the BSP APIC ID; stored in bits 31:24
+	shr rax, 24			; AL now holds the BSP CPU's APIC ID
+	shl rax, 56
 	bts rax, 16			; Interrupt Mask Enabled
 initentry:				; Initialize all entries 1:1
 	dec rcx
@@ -115,9 +120,9 @@ initentry:				; Initialize all entries 1:1
 	call ioapic_entry_write
 
 	; Enable the Timer
-;	mov rcx, 2
-;	mov rax, 0x20
-;	call ioapic_entry_write
+	mov rcx, 2
+	mov rax, 0x20
+	call ioapic_entry_write
 
 	; Enable the RTC
 	mov rcx, 8			; IRQ value
