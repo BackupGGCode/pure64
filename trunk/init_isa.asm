@@ -119,11 +119,11 @@ rtc_poll:
 	jne rtc_poll			; If so then keep polling
 	mov al, 0x0A			; Status Register A
 	out 0x70, al
-	mov al, 00100110b		; UIP (0), RTC@32.768KHz (010), Rate@1024Hz (0110)
+	mov al, 00100111b		; UIP (0), RTC@32.768KHz (010), Rate@512Hz (0111)
 	out 0x71, al
 	mov al, 0x0B			; Status Register B
 	out 0x70, al
-	or al, 01000010b		; Set Periodic(6), 24H clock(1)
+	or al, 01000000b		; Set Periodic(6)
 	out 0x71, al
 
 ;	mov al, '6'
