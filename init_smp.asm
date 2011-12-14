@@ -124,7 +124,7 @@ initentry:				; Initialize all entries 1:1
 	mov rax, 0x28			; Interrupt value
 	call ioapic_entry_write
 
-	; Start the periodic flag in the RTC
+	; Set the periodic flag in the RTC
 	mov al, 0x0B			; Status Register B
 	out 0x70, al
 	or al, 01000000b		; Set Periodic(6)

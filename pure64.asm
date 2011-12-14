@@ -569,24 +569,6 @@ clearmapnext:
 ;	mov al, 'E'
 ;	call serial_send_64
 
-; Set PIT Channel 0 to fire at 100Hz (Divisor = 1193180 / hz)
-;	mov al, 0x36			; Set Timer
-;	out 0x43, al
-;	mov al, 0x9B			; We want 100MHz so 0x2E9B
-;	out 0x40, al
-;	mov al, 0x2E
-;	out 0x40, al
-
-;	cli				; Disable Interrupts
-
-; Disable all IRQs
-;	in al, 0x21
-;	mov al, 11111111b
-;	out 0x21, al
-;	in al, 0xA1
-;	mov al, 11111111b
-;	out 0xA1, al
-
 ; Calculate amount of usable RAM from Memory Map
 	xor rcx, rcx
 	mov rsi, 0x0000000000004000	; E820 Map location
