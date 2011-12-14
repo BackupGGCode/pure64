@@ -22,13 +22,13 @@ hdbuffer:		equ 0x0000000000070000	; 32768 bytes = 0x6000 -> 0xDFFF VERIFY THIS!!
 hdbuffer1:		equ 0x000000000007E000	; 512 bytes = 0xE000 -> 0xE1FF VERIFY THIS!!!
 
 ; DQ - Starting at offset 0, increments by 0x8
-os_LocalAPICAddress:	equ SystemVariables + 0x00
-os_IOAPICAddress:	equ SystemVariables + 0x08
-os_ACPITableAddress:	equ SystemVariables + 0x10
-screen_cursor_offset:	equ SystemVariables + 0x18
-hd1_maxlba:		equ SystemVariables + 0x20
-os_Counter_Timer:	equ SystemVariables + 0x28
-os_Counter_RTC:		equ SystemVariables + 0x30
+os_ACPITableAddress:	equ SystemVariables + 0x00
+screen_cursor_offset:	equ SystemVariables + 0x08
+hd1_maxlba:		equ SystemVariables + 0x10
+os_Counter_Timer:	equ SystemVariables + 0x18
+os_Counter_RTC:		equ SystemVariables + 0x20
+os_LocalAPICAddress:	equ SystemVariables + 0x28
+os_IOAPICAddress:	equ SystemVariables + 0x30
 
 ; DD - Starting at offset 128, increments by 4
 hd1_size:		equ SystemVariables + 128
@@ -62,6 +62,7 @@ speedtempstring:	equ SystemVariables + 400
 cpu_amount_string:	equ SystemVariables + 410
 hdtempstring:		equ SystemVariables + 420
 os_key:			equ SystemVariables + 421
+os_IOAPICCount:		equ SystemVariables + 422
 
 ;MISC
 screen_cols:		db 80

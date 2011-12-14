@@ -148,10 +148,19 @@ APICioapic:
 	lodsb				; Reserved
 	xor eax, eax
 	lodsd				; IO APIC Address
+	push rdi
+	mov rdi, os_IOAPICAddress
+	xor ecx, ecx
+	mov cl, [os_IOAPICCount]
+	shl cx, 3			; Quick multiply by 3
+	add rdi, rcx
+	stosq
+	pop rdi
 ;	call os_print_newline
 ;	call os_debug_dump_eax
-	mov [os_IOAPICAddress], rax
+;	mov [os_IOAPICAddress], rax
 	lodsd				; System Vector Base
+	add byte [os_IOAPICCount], 1
 	jmp readAPICstructures		; Read the next structure
 
 APICinterruptsourceoverride:

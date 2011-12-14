@@ -626,13 +626,12 @@ endmemcalc:
 	call os_int_to_string
 
 ; Build the infomap
-	mov rdi, 0x0000000000005000
-	mov rax, [os_LocalAPICAddress]
-	stosq
-	mov rax, [os_IOAPICAddress]
+	xor rdi, rdi
+	mov di, 0x5000
+	mov rax, [os_ACPITableAddress]
 	stosq
 
-	mov rdi, 0x0000000000005010
+	mov di, 0x5010
 	mov ax, [cpu_speed]
 	stosw
 	mov ax, [cpu_activated]
@@ -640,25 +639,36 @@ endmemcalc:
 	mov ax, [cpu_detected]
 	stosw
 
-	mov rdi, 0x0000000000005020
+	mov di, 0x5020
 	mov ax, [mem_amount]
 	stosw
 
-	mov rdi, 0x0000000000005030
+	mov di, 0x5030
 	mov al, [cfg_mbr]
 	stosb
+	mov al, [os_IOAPICCount]
+	stosb
 
-	mov rdi, 0x0000000000005040
-	mov rax, [os_ACPITableAddress]
-	stosq
-
-	mov rdi, 0x0000000000005050
+	mov di, 0x5040
 	mov eax, [VBEModeInfoBlock.PhysBasePtr]
 	stosd
 	mov ax, [VBEModeInfoBlock.XResolution]
 	stosw
 	mov ax, [VBEModeInfoBlock.YResolution]
 	stosw
+
+	mov di, 0x5060
+	mov rax, [os_LocalAPICAddress]
+	stosq
+	xor ecx, ecx
+	mov cl, [os_IOAPICCount]
+	mov rsi, os_IOAPICAddress
+nextIOAPIC:
+	lodsq
+	stosq
+	sub cl, 1
+	cmp cl, 0
+	jne nextIOAPIC
 
 ; Initialization is now complete... write a message to the screen
 	mov rsi, msg_done
