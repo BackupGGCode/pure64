@@ -126,9 +126,14 @@ initentry:				; Initialize all entries 1:1
 
 	; Set the periodic flag in the RTC
 	mov al, 0x0B			; Status Register B
-	out 0x70, al
+	out 0x70, al			; Select the address
+	in al, 0x71			; Read the current settings
+	push rax
+	mov al, 0x0B			; Status Register B
+	out 0x70, al			; Select the address
+	pop rax
 	or al, 01000000b		; Set Periodic(6)
-	out 0x71, al
+	out 0x71, al			; Write the new settings
 
 	sti				; Enable interrupts
 
