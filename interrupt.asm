@@ -28,40 +28,11 @@ interrupt_gate:				; handler for all other interrupts
 
 
 ; -----------------------------------------------------------------------------
-; Timer interrupt. IRQ 0x00, INT 0x20
-;align 16
-;timer:
-;	push rdi
-;	push rax
-;
-;	add qword [os_Counter_Timer], 1	; 64-bit counter started at bootup
-;
-;	mov al, 'T'
-;	mov [0x000B808C], al
-;	mov rax, [os_Counter_Timer]
-;	and al, 1			; Clear all but lowest bit (Can only be 0 or 1)
-;	add al, 48
-;	mov [0x000B808E], al
-;
-;	mov rdi, [os_LocalAPICAddress]	; Acknowledge the IRQ on APIC
-;	add rdi, 0xB0
-;	xor eax, eax
-;	stosd
-;
-;	pop rax
-;	pop rdi
-;	iretq
-; -----------------------------------------------------------------------------
-
-
-; -----------------------------------------------------------------------------
 ; Keyboard interrupt. IRQ 0x01, INT 0x21
 ; This IRQ runs whenever there is input on the keyboard
 align 16
 keyboard:
 	push rdi
-	push rsi
-	push rcx
 	push rax
 
 	xor rax, rax
@@ -78,24 +49,6 @@ keydown:
 	add rax, 10
 	mov [os_Counter_RTC], rax
 
-	mov ax, 0x0004
-	call os_move_cursor
-	mov rsi, [os_LocalAPICAddress]
-	add rsi, 0x100
-	mov rcx, 8
-nextreg:
-	mov rax, rsi
-	call os_debug_dump_rax
-	mov al, ' '
-	call os_print_char
-	lodsd
-	call os_debug_dump_eax
-	add rsi, 12
-	call os_print_newline
-	sub rcx, 1
-	cmp rcx, 0
-	jne nextreg
-
 keyboard_done:
 	mov rdi, [os_LocalAPICAddress]	; Acknowledge the IRQ on APIC
 	add rdi, 0xB0
@@ -103,8 +56,6 @@ keyboard_done:
 	stosd
 
 	pop rax
-	pop rcx
-	pop rsi
 	pop rdi
 	iretq
 ; -----------------------------------------------------------------------------
@@ -115,8 +66,6 @@ keyboard_done:
 align 16
 rtc:
 	push rdi
-	push rsi
-	push rcx
 	push rax
 
 	add qword [os_Counter_RTC], 1	; 64-bit counter started at bootup
@@ -131,32 +80,12 @@ rtc:
 	out 0x70, al			; Port 0x70 is the RTC index, and 0x71 is the RTC data
 	in al, 0x71			; Read the value in register C
 
-	mov ax, 0x0004
-	call os_move_cursor
-	mov rsi, [os_LocalAPICAddress]
-	add rsi, 0x100
-	mov rcx, 8
-nextreg1:
-	mov rax, rsi
-	call os_debug_dump_rax
-	mov al, ' '
-	call os_print_char
-	lodsd
-	call os_debug_dump_eax
-	add rsi, 12
-	call os_print_newline
-	sub rcx, 1
-	cmp rcx, 0
-	jne nextreg1
-
 	mov rdi, [os_LocalAPICAddress]	; Acknowledge the IRQ on APIC
 	add rdi, 0xB0
 	xor eax, eax
 	stosd
 
 	pop rax
-	pop rcx
-	pop rsi
 	pop rdi
 	iretq
 ; -----------------------------------------------------------------------------
