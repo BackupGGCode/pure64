@@ -101,12 +101,12 @@ check_A20:
 ;	call serial_send_16
 
 ; Set PIT Channel 0 to fire at 1000Hz (Divisor = 1193180 / hz)
-	mov al, 00110110b		; Set Timer - Channel 0, lobyte/highbyte, square wave, binary
-	out 0x43, al
-	mov al, 0xA9			; We want 1000MHz so 0x04A9
-	out 0x40, al
-	mov al, 0x04
-	out 0x40, al
+;	mov al, 00110110b		; Set Timer - Channel 0, lobyte/highbyte, square wave, binary
+;	out 0x43, al
+;	mov al, 0xA9			; We want 1000MHz so 0x04A9
+;	out 0x40, al
+;	mov al, 0x04
+;	out 0x40, al
 
 ; Set up RTC
 ; Port 0x70 is RTC Address, and 0x71 is RTC Data
@@ -121,10 +121,6 @@ rtc_poll:
 	out 0x70, al
 	mov al, 00100110b		; UIP (0), RTC@32.768KHz (010), Rate@1024Hz (0110)
 	out 0x71, al
-;	mov al, 0x0B			; Status Register B
-;	out 0x70, al
-;	or al, 01000000b		; Set Periodic(6)
-;	out 0x71, al
 
 ;	mov al, '6'
 ;	call serial_send_16
