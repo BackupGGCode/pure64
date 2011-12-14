@@ -43,7 +43,7 @@ foundACPI:
 	mov rsi, [os_LocalAPICAddress]
 	cmp rsi, 0x00000000
 	je noMP				; Skip MP init if we didn't get a valid LAPIC address
-	
+
 ;	mov ecx, 0x0000001B		; IA32_APIC_BASE MSR
 ;	rdmsr				; Test bit 11
 ;	call os_debug_dump_eax
@@ -61,7 +61,7 @@ foundACPI:
 	mov dword [rsi+0xE0], eax
 
 	mov eax, dword [rsi+0xF0]	; Spurious Interrupt Register
-	mov al, 0xFF
+	mov al, 0xF8
 	bts eax, 8			; Enable APIC (Set bit 8)
 	mov dword [rsi+0xF0], eax
 
@@ -119,16 +119,12 @@ initentry:				; Initialize all entries 1:1
 	mov rax, 0x21
 	call ioapic_entry_write
 
-	; Enable the Timer
-;	mov rcx, 2
-;	mov rax, 0x20
-;	call ioapic_entry_write
-
 	; Enable the RTC
 	mov rcx, 8			; IRQ value
 	mov rax, 0x28			; Interrupt value
 	call ioapic_entry_write
 
+	; Start the periodic flag in the RTC
 	mov al, 0x0B			; Status Register B
 	out 0x70, al
 	or al, 01000000b		; Set Periodic(6)
@@ -149,14 +145,14 @@ initentry:				; Initialize all entries 1:1
 	lodsd			; APIC ID is stored in bits 31:24
 	shr rax, 24		; AL now holds the BSP CPU's APIC ID
 	mov dl, al		; Store BSP APIC ID in DL
-	mov rsi, 0x0000000000005800
-	xor eax, eax
 
 	mov al, '5'		; Start the AP's
 	mov [0x000B809C], al
 	mov al, '8'
 	mov [0x000B809E], al
 
+	mov rsi, 0x0000000000005800
+	xor eax, eax
 smp_send_INIT:
 	cmp rsi, 0x0000000000005900
 	je smp_send_INIT_done

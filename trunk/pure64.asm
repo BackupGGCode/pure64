@@ -473,16 +473,13 @@ make_interrupt_gates: 			; make gates for the other interrupts
 	mov word [0x12*16], exception_gate_18
 	mov word [0x13*16], exception_gate_19
 
-;	mov rdi, 0x20			; Set up Timer IRQ handler
-;	mov rax, timer
-;	call create_gate
 	mov rdi, 0x21			; Set up Keyboard IRQ handler
 	mov rax, keyboard
 	call create_gate	
 	mov rdi, 0x28			; Set up RTC IRQ handler
 	mov rax, rtc
 	call create_gate
-	mov rdi, 0xFF			; Set up Spurious handler
+	mov rdi, 0xF8			; Set up Spurious handler
 	mov rax, spurious
 	call create_gate
 
@@ -846,7 +843,7 @@ nokernelhalt:
 %include "sysvar.asm"
 
 ; Pad to an even KB file (6 KiB)
-;times 7168-($-$$) db 0x90
+times 7168-($-$$) db 0x90
 
 ; =============================================================================
 ; EOF
