@@ -385,8 +385,6 @@ clearcs64:
 	lgdt [GDTR64]			; Reload the GDT
 
 ; Debug
-	mov al, '4'
-	mov [0x000B809C], al
 	mov al, '2'
 	mov [0x000B809E], al
 ;	mov al, '2'
@@ -488,8 +486,6 @@ make_interrupt_gates: 			; make gates for the other interrupts
 
 ; Debug
 	mov al, '4'
-	mov [0x000B809C], al
-	mov al, '4'
 	mov [0x000B809E], al
 ;	mov al, '5'
 ;	call serial_send_64
@@ -507,9 +503,7 @@ clearmapnext:
 	call init_cpu			; Setup CPU
 
 ; Debug
-	mov al, '4'			; CPU Init complete
-	mov [0x000B809C], al
-	mov al, '6'
+	mov al, '6'			; CPU Init complete
 	mov [0x000B809E], al
 ;	mov al, '6'
 ;	call serial_send_64
@@ -524,9 +518,7 @@ clearmapnext:
 	call hdd_setup			; Gather Hard Drive information
 
 ; Debug
-	mov al, '4'			; HDD Init complete
-	mov [0x000B809C], al
-	mov al, '8'
+	mov al, '8'			; HDD Init complete
 	mov [0x000B809E], al
 ;	mov al, '8'
 ;	call serial_send_64
@@ -602,8 +594,6 @@ endmemcalc:
 	mov word [mem_amount], cx
 
 ; Debug
-	mov al, '6'
-	mov [0x000B809C], al
 	mov al, '2'
 	mov [0x000B809E], al
 
@@ -685,8 +675,6 @@ nextIOAPIC:
 nodefaultconfig:
 
 ; Debug
-	mov al, '6'
-	mov [0x000B809C], al
 	mov al, '4'
 	mov [0x000B809E], al
 
@@ -743,8 +731,6 @@ nodefaultconfig:
 
 ; Debug
 	push rax
-	mov al, '6'
-	mov [0x000B809C], al
 	mov al, '6'
 	mov [0x000B809E], al
 	pop rax

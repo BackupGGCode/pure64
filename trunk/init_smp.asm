@@ -26,17 +26,15 @@ searchingforACPI:
 	jge noMP			; We can't find ACPI either.. bail out and default to single cpu mode
 	jmp searchingforACPI 
 
-	mov al, '5'			; ACPI tables detected
-	mov [0x000B809C], al
-	mov al, '2'
+	mov al, '2'			; ACPI tables detected
 	mov [0x000B809E], al
 
 foundACPI:
+;	lodsb				; Checksum
+; Process the chechsum
 	call init_smp_acpi 
 
-	mov al, '5'			; ACPI tables parsed
-	mov [0x000B809C], al
-	mov al, '6'
+	mov al, '6'			; ACPI tables parsed
 	mov [0x000B809E], al
 
 ; Step 2: Enable Local APIC on BSP
@@ -151,9 +149,7 @@ initentry:				; Initialize all entries 1:1
 	shr rax, 24		; AL now holds the BSP CPU's APIC ID
 	mov dl, al		; Store BSP APIC ID in DL
 
-	mov al, '5'		; Start the AP's
-	mov [0x000B809C], al
-	mov al, '8'
+	mov al, '8'		; Start the AP's
 	mov [0x000B809E], al
 
 	mov rsi, 0x0000000000005800
@@ -239,8 +235,6 @@ smp_send_SIPI_skipcore:
 
 smp_send_SIPI_done:
 
-	mov al, '5'
-	mov [0x000B809C], al
 	mov al, 'A'
 	mov [0x000B809E], al
 ;	mov al, 'S'
@@ -269,8 +263,6 @@ noMP:
 	mov al, 3			; This is the BSP so bits 0 and 1 are set
 	stosb
 
-	mov al, '5'
-	mov [0x000B809C], al
 	mov al, 'C'
 	mov [0x000B809E], al
 
@@ -294,8 +286,6 @@ speedtest:
 	div rcx
 	mov [cpu_speed], ax
 
-	mov al, '5'
-	mov [0x000B809C], al
 	mov al, 'E'
 	mov [0x000B809E], al
 	

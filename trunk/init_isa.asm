@@ -12,9 +12,6 @@ isa_setup:
 	mov ecx, 2048
 	rep stosd
 
-;	mov al, '1'
-;	call serial_send_16
-
 ; Get the BIOS E820 Memory Map
 ; use the INT 0x15, eax= 0xE820 BIOS function to get a memory map
 ; inputs: es:di -> destination buffer for 24 byte entries
@@ -67,9 +64,6 @@ memmapend:
 	mov ecx, 8
 	rep stosd
 
-;	mov al, '2'
-;	call serial_send_16
-
 ; Enable the A20 gate
 set_A20:
 	in al, 0x64
@@ -83,30 +77,6 @@ check_A20:
 	jnz check_A20
 	mov al, 0xDF
 	out 0x60, al
-
-;	mov al, '4'
-;	call serial_send_16
-
-; Set keyboard repeat rate to max
-;	mov al, 0xf3
-;	out 0x60, al			; Set Typematic Rate/Delay
-;	xor al, al
-;	out 0x60, al			; 30 cps and .25 second delay
-;	mov al, 0xed
-;	out 0x60, al			; Set/Reset LEDs
-;	xor al, al
-;	out 0x60, al			; all off
-
-;	mov al, '5'
-;	call serial_send_16
-
-; Set PIT Channel 0 to fire at 1000Hz (Divisor = 1193180 / hz)
-;	mov al, 00110110b		; Set Timer - Channel 0, lobyte/highbyte, square wave, binary
-;	out 0x43, al
-;	mov al, 0xA9			; We want 1000MHz so 0x04A9
-;	out 0x40, al
-;	mov al, 0x04
-;	out 0x40, al
 
 ; Set up RTC
 ; Port 0x70 is RTC Address, and 0x71 is RTC Data
@@ -122,15 +92,9 @@ rtc_poll:
 	mov al, 00100110b		; UIP (0), RTC@32.768KHz (010), Rate@1024Hz (0110)
 	out 0x71, al			; Write the data
 
-;	mov al, '6'
-;	call serial_send_16
-
 ; VBE init
 	cmp byte [cfg_vesa], 1		; Check if VESA should be enabled
 	jne VBEdone			; If not then skip VESA init
-
-;	mov al, '7'
-;	call serial_send_16
 
 	mov edi, VBEModeInfoBlock	; VBE data will be stored at this address
 	mov ax, 0x4F01			; GET SuperVGA MODE INFORMATION - http://www.ctyme.com/intr/rb-0274.htm
@@ -157,13 +121,8 @@ rtc_poll:
 
 VBEfail:
 	mov byte [cfg_vesa], 0		; Clear the VESA config as it was not sucessful
-;	mov al, 'B'
-;	call serial_send_16
 
 VBEdone:
-
-;	mov al, 'C'
-;	call serial_send_16
 
 	; Remap PIC IRQ's
 	mov al, 00010001b		; begin PIC 1 initialization
@@ -186,9 +145,6 @@ VBEdone:
 	mov al, 0xFF
 	out 0x21, al
 	out 0xA1, al
-
-;	mov al, 'E'
-;	call serial_send_16
 
 ret
 
