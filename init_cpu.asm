@@ -9,16 +9,16 @@
 init_cpu:
 
 ; Check for Prefetcher and L2 Cache support
-	mov r15b, 1			; Set MSR support to 1
-	xor eax, eax
-	mov al, 1			; Access CPUID leaf 1
-	cpuid
-	shr rax, 8			; Family now in AL (lowest 4 bits)
-	and al, 0x0F			; Clear the high 4 bits
-	cmp al, 0x0F
-	jne init_cpu_msrok		; If Family is not 0xF then jump
-	mov r15b, 0			; If it is 0xF (Older P4/Xeon) then set MSR support to 0
-init_cpu_msrok:
+;	mov r15b, 1			; Set MSR support to 1
+;	xor eax, eax
+;	mov al, 1			; Access CPUID leaf 1
+;	cpuid
+;	shr rax, 8			; Family now in AL (lowest 4 bits)
+;	and al, 0x0F			; Clear the high 4 bits
+;	cmp al, 0x0F
+;	jne init_cpu_msrok		; If Family is not 0xF then jump
+;	mov r15b, 0			; If it is 0xF (Older P4/Xeon) then set MSR support to 0
+;init_cpu_msrok:
 
 ; Disable Cache
 	mov rax, cr0
