@@ -65,9 +65,9 @@ no_mbr:
 	int 0x10
 
 ; Hide the cursor
-	mov ax, 0x0100
-	mov cx, 0x200F
-	int 0x10
+;	mov ax, 0x0100
+;	mov cx, 0x200F
+;	int 0x10
 
 ; Print message
 	mov si, initStartupMsg
