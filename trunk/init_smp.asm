@@ -14,30 +14,7 @@ smp_setup:
 ;	mov al, 'S'
 ;	call serial_send_64
 
-; Step 1: Get APIC Information via ACPI
-smp_check_for_acpi:			; Look for the Root System Description Pointer Structure
-	mov rsi, 0x00000000000E0000	; We want to start looking here
-	mov rbx, 'RSD PTR '		; This in the Signature for the ACPI Structure Table (0x2052545020445352)
-searchingforACPI:
-	lodsq				; Load a quad word from RSI and store in RAX, then increment RSI by 8
-	cmp rax, rbx
-	je foundACPI
-	cmp rsi, 0x00000000000FFFFF	; Keep looking until we get here
-	jge noMP			; We can't find ACPI either.. bail out and default to single cpu mode
-	jmp searchingforACPI 
-
-	mov al, '2'			; ACPI tables detected
-	mov [0x000B809E], al
-
-foundACPI:
-;	lodsb				; Checksum
-; Process the chechsum
-	call init_smp_acpi 
-
-	mov al, '6'			; ACPI tables parsed
-	mov [0x000B809E], al
-
-; Step 2: Enable Local APIC on BSP
+; Step 1: Enable Local APIC on BSP
 	mov rsi, [os_LocalAPICAddress]
 	cmp rsi, 0x00000000
 	je noMP				; Skip MP init if we didn't get a valid LAPIC address
@@ -93,7 +70,7 @@ foundACPI:
 ;	bts eax, 16			;bit16:Mask interrupts (0==Unmasked, 1== Masked)
 ;	mov dword [rsi+0x370], eax
 
-; Step 3: Prepare the I/O APIC
+; Step 2: Prepare the I/O APIC
 	xor eax, eax
 	mov rcx, 1			; Register 1 - IOAPIC VERSION REGISTER
 	call ioapic_reg_read
@@ -130,16 +107,21 @@ initentry:				; Initialize all entries 1:1
 	mov al, 0x0B			; Status Register B
 	out 0x70, al			; Select the address
 	pop rax
-	or al, 01000000b		; Set Periodic(6)
+	bts ax, 6			; Set Periodic(6)
 	out 0x71, al			; Write the new settings
 
 	sti				; Enable interrupts
+
+	; Acknowledge the RTC
+	mov al, 0x0C			; Status Register C
+	out 0x70, al			; Select the address
+	in al, 0x71			; Read the current settings
 
 ; Check if we want the AP's to be enabled.. if not then skip to end
 ;	cmp byte [cfg_smpinit], 1	; Check if SMP should be enabled
 ;	jne noMP			; If not then skip SMP init
 
-; Step 4: Start the AP's one by one
+; Step 3: Start the AP's one by one
 	xor eax, eax
 	xor ecx, ecx
 	xor edx, edx
@@ -248,7 +230,7 @@ wait3:
 	cmp rax, rbx
 	jg wait3
 
-; Step 5: Finish up
+; Step 4: Finish up
 noMP:
 	lock
 	inc word [cpu_activated]	; BSP adds one here
@@ -381,9 +363,6 @@ ioapic_entry_read:
 	pop rbx
 	ret
 ; -----------------------------------------------------------------------------
-
-
-%include "init_smp_acpi.asm"
 
 
 ; =============================================================================

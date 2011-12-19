@@ -515,6 +515,8 @@ clearmapnext:
 ;	xor rdx, rdx
 ;	div rax
 
+	call init_acpi			; Find and process the ACPI tables
+
 	call hdd_setup			; Gather Hard Drive information
 
 ; Debug
@@ -812,6 +814,7 @@ nokernelhalt:
 ;	ret
 
 %include "init_cpu.asm"
+%include "init_acpi.asm"
 %include "init_hdd.asm"
 %include "init_smp.asm"
 %include "syscalls.asm"

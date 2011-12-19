@@ -2,11 +2,22 @@
 ; Pure64 -- a 64-bit OS loader written in Assembly for x86-64 systems
 ; Copyright (C) 2008-2011 Return Infinity -- see LICENSE.TXT
 ;
-; INIT SMP ACPI
+; INIT ACPI
 ; =============================================================================
 
 
-init_smp_acpi:
+init_acpi:
+	mov rsi, 0x00000000000E0000	; Start looking for the Root System Description Pointer Structure
+	mov rbx, 'RSD PTR '		; This in the Signature for the ACPI Structure Table (0x2052545020445352)
+searchingforACPI:
+	lodsq				; Load a quad word from RSI and store in RAX, then increment RSI by 8
+	cmp rax, rbx
+	je foundACPI
+	cmp rsi, 0x00000000000FFFFF	; Keep looking until we get here
+	jge noMP			; We can't find ACPI either.. bail out and default to single cpu mode
+	jmp searchingforACPI
+
+foundACPI:
 	lodsb				; Checksum
 	lodsd				; OEMID (First 4 bytes)
 	lodsw				; OEMID (Last 2 bytes)
