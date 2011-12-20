@@ -63,7 +63,7 @@ speedtempstring:	equ SystemVariables + 400
 cpu_amount_string:	equ SystemVariables + 410
 hdtempstring:		equ SystemVariables + 420
 os_key:			equ SystemVariables + 421
-os_IOAPICCount:		equ SystemVariables + 422
+os_IOAPICCount:		equ SystemVariables + 424
 
 ;MISC
 screen_cols:		db 80

@@ -186,10 +186,10 @@ APICioapic:
 	add rdi, rcx
 	stosq
 	pop rdi
-;	call os_debug_dump_eax
+	call os_debug_dump_eax
 	mov [os_IOAPICAddress], rax
 	lodsd				; System Vector Base
-	add byte [os_IOAPICCount], 1
+	inc byte [os_IOAPICCount]
 	jmp readAPICstructures		; Read the next structure
 
 APICinterruptsourceoverride:
