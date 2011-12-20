@@ -14,7 +14,7 @@ searchingforACPI:
 	cmp rax, rbx
 	je foundACPI
 	cmp rsi, 0x00000000000FFFFF	; Keep looking until we get here
-	jge noMP			; We can't find ACPI either.. bail out and default to single cpu mode
+	jge noACPI			; ACPI tables couldn't be found, Fail.
 	jmp searchingforACPI
 
 foundACPI:
@@ -84,7 +84,7 @@ findAPICTable:
 	mov [0x000B809C], al
 	mov al, '4'
 	mov [0x000B809E], al
-	mov ebx, 'APIC'
+	mov ebx, 'APIC'			; Signature for the Multiple APIC Description Table
 	xor ecx, ecx
 searchingforAPIC:
 	pop rsi
@@ -94,7 +94,7 @@ searchingforAPIC:
 	je foundAPICTable
 	cmp ecx, edx
 	jne searchingforAPIC
-	jmp noMP
+	jmp noACPIAPIC
 
 fixstack:
 	pop rax
@@ -126,22 +126,36 @@ foundAPICTable:
 readAPICstructures:
 	cmp ebx, ecx
 	jge init_smp_acpi_done
+;	mov al, '-'
+;	call os_print_char
+;	call os_print_char
 	lodsb				; APIC Structure Type
-;	call os_print_newline
 ;	call os_debug_dump_al
 ;	push rax
 ;	mov al, ' '
 ;	call os_print_char
 ;	pop rax
-	cmp al, 0			; Processor Local APIC
-	je APICcpu
-	cmp al, 1			; I/O APIC
+	cmp al, 0x00			; Processor Local APIC
+	je APICapic
+	cmp al, 0x01			; I/O APIC
 	je APICioapic
-	cmp al, 2			; Interrupt Source Override
+	cmp al, 0x02			; Interrupt Source Override
 	je APICinterruptsourceoverride
+;	cmp al, 0x03			; Non-maskable Interrupt Source (NMI)
+;	je APICnmi
+;	cmp al, 0x04			; Local APIC NMI
+;	je APIClocalapicnmi
+;	cmp al, 0x05			; Local APIC Address Override
+;	je APICaddressoverride
+;	cmp al, 0x09			; Processor Local x2APIC
+;	je APICx2apic
+;	cmp al, 0x0A			; Local x2APIC NMI
+;	je APICx2nmi
+
 	jmp APICignore
 
-APICcpu:
+APICapic:
+; TODO: Store APIC ID and Flags as two 32-bit entries.
 	inc word [cpu_detected]
 	xor eax, eax
 	lodsb				; Length (will be set to 8)
@@ -150,7 +164,7 @@ APICcpu:
 	lodsb				; APIC ID
 	push rdi
 	add rdi, rax
-	lodsd				; Flags
+	lodsd				; Flags (Bit 0 set if enabled/usable)
 	stosb
 	pop rdi
 	jmp readAPICstructures		; Read the next structure
@@ -202,6 +216,8 @@ APICignore:
 init_smp_acpi_done:
 	ret
 
+noACPI:
+noACPIAPIC:
 novalidacpi:
 	mov al, 'X'
 	mov [0x000B809A], al	
