@@ -622,6 +622,8 @@ endmemcalc:
 	mov di, 0x5000
 	mov rax, [os_ACPITableAddress]
 	stosq
+	mov eax, [os_BSP]
+	stosd
 
 	mov di, 0x5010
 	mov ax, [cpu_speed]

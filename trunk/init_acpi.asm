@@ -107,7 +107,7 @@ foundAPICTable:
 
 	lodsd				; Length of MADT in bytes
 	mov ecx, eax			; Store the length in ECX
-	xor ebx, ebx
+	xor ebx, ebx			; EBX is the counter
 	lodsb				; Revision
 	lodsb				; Checksum
 	lodsd				; OEMID (First 4 bytes)
@@ -121,12 +121,12 @@ foundAPICTable:
 	mov [os_LocalAPICAddress], rax	; Save the Address of the Local APIC
 	lodsd				; Flags
 	add ebx, 44
-	mov rdi, 0x0000000000005800
+	mov rdi, 0x0000000000005100	; Valid CPU IDs
 
 readAPICstructures:
 	cmp ebx, ecx
 	jge init_smp_acpi_done
-;	mov al, '-'
+;	mov al, ' '
 ;	call os_print_char
 ;	call os_print_char
 	lodsb				; APIC Structure Type
@@ -155,18 +155,19 @@ readAPICstructures:
 	jmp APICignore
 
 APICapic:
-; TODO: Store APIC ID and Flags as two 32-bit entries.
-	inc word [cpu_detected]
 	xor eax, eax
+	xor edx, edx
 	lodsb				; Length (will be set to 8)
 	add ebx, eax
 	lodsb				; ACPI Processor ID
 	lodsb				; APIC ID
-	push rdi
-	add rdi, rax
+	xchg eax, edx
 	lodsd				; Flags (Bit 0 set if enabled/usable)
+	bt eax, 0			; Test to see if usable
+	jnc readAPICstructures		; Read the next structure if CPU not usable
+	inc word [cpu_detected]
+	xchg eax, edx
 	stosb
-	pop rdi
 	jmp readAPICstructures		; Read the next structure
 
 APICioapic:
@@ -186,7 +187,7 @@ APICioapic:
 	stosq
 	pop rdi
 ;	call os_debug_dump_eax
-;	mov [os_IOAPICAddress], rax
+	mov [os_IOAPICAddress], rax
 	lodsd				; System Vector Base
 	add byte [os_IOAPICCount], 1
 	jmp readAPICstructures		; Read the next structure
