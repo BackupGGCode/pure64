@@ -123,7 +123,6 @@ initentry:				; Initialize all entries 1:1
 
 ; Step 3: Start the AP's one by one
 	xor eax, eax
-	xor ecx, ecx
 	xor edx, edx
 	mov rsi, [os_LocalAPICAddress]
 	add rsi, 0x20		; Add the offset for the APIC ID location
@@ -134,28 +133,20 @@ initentry:				; Initialize all entries 1:1
 	mov al, '8'		; Start the AP's
 	mov [0x000B809E], al
 
-	mov rsi, 0x0000000000005800
+	mov rsi, 0x0000000000005100
 	xor eax, eax
+	xor ecx, ecx
+	mov cx, [cpu_detected]
 smp_send_INIT:
-	cmp rsi, 0x0000000000005900
+	cmp cx, 0
 	je smp_send_INIT_done
 	lodsb
-	cmp al, 1		; Is it enabled?
-	jne smp_send_INIT_skipcore
 
-;	push rax		; Debug - display APIC ID
-;	mov al, cl
-;	add al, 48
-;	call os_print_char
-;	call serial_send_64
-;	pop rax
-
-	cmp cl, dl		; Is it the BSP?
+	cmp al, dl		; Is it the BSP?
 	je smp_send_INIT_skipcore
 
 	; Broadcast 'INIT' IPI to APIC ID in AL
 	mov rdi, [os_LocalAPICAddress]
-	mov al, cl
 	shl eax, 24
 	mov dword [rdi+0x310], eax		; Interrupt Command Register (ICR); bits 63-32
 	mov eax, 0x00004500
@@ -166,7 +157,7 @@ smp_send_INIT_verify:
 	jc smp_send_INIT_verify
 
 smp_send_INIT_skipcore:
-	inc cl
+	dec cl
 	jmp smp_send_INIT	
 
 smp_send_INIT_done:
@@ -180,28 +171,19 @@ wait1:
 ;	mov al, 'i'
 ;	call serial_send_64
 
-	mov rsi, 0x0000000000005800
+	mov rsi, 0x0000000000005100
 	xor ecx, ecx
+	mov cx, [cpu_detected]
 smp_send_SIPI:
-	cmp rsi, 0x0000000000005900
+	cmp cx, 0
 	je smp_send_SIPI_done
 	lodsb
-	cmp al, 1				; Is it enabled?
-	jne smp_send_SIPI_skipcore
 
-;	push rax				; Debug - display APIC ID
-;	mov al, cl
-;	add al, 48
-;	call os_print_char
-;	call serial_send_64
-;	pop rax
-
-	cmp cl, dl				; Is it the BSP?
+	cmp al, dl				; Is it the BSP?
 	je smp_send_SIPI_skipcore
 
 	; Broadcast 'Startup' IPI to destination using vector 0x08 to specify entry-point is at the memory-address 0x00008000
 	mov rdi, [os_LocalAPICAddress]
-	mov al, cl
 	shl eax, 24
 	mov dword [rdi+0x310], eax		; Interrupt Command Register (ICR); bits 63-32
 	mov eax, 0x00004608			; Vector 0x08
@@ -212,7 +194,7 @@ smp_send_SIPI_verify:
 	jc smp_send_SIPI_verify
 
 smp_send_SIPI_skipcore:
-	inc cl
+	dec cl
 	jmp smp_send_SIPI	
 
 smp_send_SIPI_done:
@@ -240,10 +222,7 @@ noMP:
 	add rsi, 0x20			; Add the offset for the APIC ID location
 	lodsd				; APIC ID is stored in bits 31:24
 	shr rax, 24			; AL now holds the CPU's APIC ID (0 - 255)
-	mov rdi, 0x00005700		; The location where the cpu values are stored
-	add rdi, rax			; RDI points to infomap CPU area + APIC ID. ex F701 would be APIC ID 1
-	mov al, 3			; This is the BSP so bits 0 and 1 are set
-	stosb
+	mov [os_BSP], eax		; Store the BSP APIC ID
 
 	mov al, 'C'
 	mov [0x000B809E], al
