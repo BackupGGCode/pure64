@@ -89,7 +89,7 @@ ff_next_sector:
 ; Search for file name, and find start cluster.
 ff_next_entry:
 	mov cx, 11
-	mov si, filename
+	mov si, loadername
 	repe cmpsb
 	jz ff_done		; note that di now is at dirent+11
 
@@ -240,7 +240,8 @@ print_string_16:			; Output string in SI to screen
 
 msg_Load db "Loading... ", 0
 msg_Error db "No "
-filename db "PURE64  SYS", 0
+loadername db "PURE64  SYS", 0
+kernelname db "KERNEL64SYS", 0
 datastart dw 0x0000
 rootstart dw 0x0000
 tcluster dw 0x0000
