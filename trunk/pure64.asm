@@ -64,11 +64,6 @@ no_mbr:
 	mov ax, 0x0003			; Set to normal (80x25 text) video mode
 	int 0x10
 
-; Hide the cursor
-;	mov ax, 0x0100
-;	mov cx, 0x200F
-;	int 0x10
-
 ; Print message
 	mov si, initStartupMsg
 	call print_string_16
@@ -482,7 +477,6 @@ make_interrupt_gates: 			; make gates for the other interrupts
 	call create_gate
 
 	lidt [IDTR64]			; load IDT register
-;	sti				; enable interrupts
 
 ; Debug
 	mov al, '4'
@@ -500,7 +494,11 @@ clearmapnext:
 	cmp rcx, 0
 	jne clearmapnext
 
+	call init_acpi			; Find and process the ACPI tables
+
 	call init_cpu			; Setup CPU
+
+	call init_ioapic		; Setup the IO-APIC(s), also activate interrupts
 
 ; Debug
 	mov al, '6'			; CPU Init complete
@@ -514,8 +512,6 @@ clearmapnext:
 ;	xor rcx, rcx
 ;	xor rdx, rdx
 ;	div rax
-
-	call init_acpi			; Find and process the ACPI tables
 
 	call hdd_setup			; Gather Hard Drive information
 
@@ -817,6 +813,7 @@ nokernelhalt:
 
 %include "init_cpu.asm"
 %include "init_acpi.asm"
+%include "init_ioapic.asm"
 %include "init_hdd.asm"
 %include "init_smp.asm"
 %include "syscalls.asm"
