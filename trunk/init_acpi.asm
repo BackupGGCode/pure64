@@ -161,8 +161,8 @@ readAPICstructures:
 ;	je APIClocalapicnmi
 ;	cmp al, 0x05			; Local APIC Address Override
 ;	je APICaddressoverride
-;	cmp al, 0x09			; Processor Local x2APIC
-;	je APICx2apic
+	cmp al, 0x09			; Processor Local x2APIC
+	je APICx2apic
 ;	cmp al, 0x0A			; Local x2APIC NMI
 ;	je APICx2nmi
 
@@ -196,11 +196,11 @@ APICioapic:
 	mov rdi, os_IOAPICAddress
 	xor ecx, ecx
 	mov cl, [os_IOAPICCount]
-	shl cx, 4			; Quick multiply by 16
+	shl cx, 3			; Quick multiply by 8
 	add rdi, rcx
-	stosq				; Store the IO APIC Address
+	stosd				; Store the IO APIC Address
 	lodsd				; System Vector Base
-	stosq				; Store the IO APIC Vector Base
+	stosd				; Store the IO APIC Vector Base
 	pop rdi
 	inc byte [os_IOAPICCount]
 	jmp readAPICstructures		; Read the next structure
@@ -217,6 +217,24 @@ APICinterruptsourceoverride:
 	lodsd				; Global System Interrupt
 ;	call os_debug_dump_eax
 	lodsw				; Flags
+	jmp readAPICstructures		; Read the next structure
+
+APICx2apic:
+	xor eax, eax
+	xor edx, edx
+	lodsb				; Length (will be set to 16)
+	lodsw				; Reserved; Must be Zero
+	lodsd
+	xchg eax, edx			; Save the x2APIC ID to EDX
+	lodsd				; Flags (Bit 0 set if enabled/usable)
+	bt eax, 0			; Test to see if usable
+	jnc APICx2apicEnd		; Read the next structure if CPU not usable
+	xchg eax, edx			; Restore the x2APIC ID back to EAX
+	call os_debug_dump_eax
+	call os_print_newline
+	; Save the ID's somewhere
+APICx2apicEnd:
+	lodsd				; ACPI Processor UID
 	jmp readAPICstructures		; Read the next structure
 
 APICignore:
