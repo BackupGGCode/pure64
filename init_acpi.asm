@@ -17,7 +17,21 @@ searchingforACPI:
 	jge noACPI			; ACPI tables couldn't be found, Fail.
 	jmp searchingforACPI
 
-foundACPI:
+foundACPI:				; Found a Pointer Structure, verify the checksum
+	push rsi
+	xor ebx, ebx
+	mov ecx, 20			; As per the spec only the first 20 bytes matter
+	sub rsi, 8			; Bytes 0 thru 19 must sum to zero
+nextchecksum:
+	lodsb				; Get a byte
+	add bl, al			; Add it to the running total
+	sub cl, 1
+	cmp cl, 0
+	jne nextchecksum
+	pop rsi
+	cmp bl, 0
+	jne searchingforACPI		; Checksum didn't check out? Then keep looking.
+
 	lodsb				; Checksum
 	lodsd				; OEMID (First 4 bytes)
 	lodsw				; OEMID (Last 2 bytes)
@@ -161,12 +175,12 @@ APICapic:
 	add ebx, eax
 	lodsb				; ACPI Processor ID
 	lodsb				; APIC ID
-	xchg eax, edx
+	xchg eax, edx			; Save the APIC ID to EDX
 	lodsd				; Flags (Bit 0 set if enabled/usable)
 	bt eax, 0			; Test to see if usable
 	jnc readAPICstructures		; Read the next structure if CPU not usable
 	inc word [cpu_detected]
-	xchg eax, edx
+	xchg eax, edx			; Restore the APIC ID back to EAX
 	stosb
 	jmp readAPICstructures		; Read the next structure
 
@@ -182,13 +196,12 @@ APICioapic:
 	mov rdi, os_IOAPICAddress
 	xor ecx, ecx
 	mov cl, [os_IOAPICCount]
-	shl cx, 3			; Quick multiply by 3
+	shl cx, 4			; Quick multiply by 16
 	add rdi, rcx
-	stosq
-	pop rdi
-;	call os_debug_dump_eax
-;	mov [os_IOAPICAddress], rax
+	stosq				; Store the IO APIC Address
 	lodsd				; System Vector Base
+	stosq				; Store the IO APIC Vector Base
+	pop rdi
 	inc byte [os_IOAPICCount]
 	jmp readAPICstructures		; Read the next structure
 
