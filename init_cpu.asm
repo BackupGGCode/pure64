@@ -151,7 +151,7 @@ init_cpu:
 	mov dword [rsi+0x80], eax
 
 	mov eax, dword [rsi+0xD0]	; Logical Destination Register
-	and eax, 0x00FFFFFF
+	or eax, 0xFF000000		; Set bits 31-24 for the bitmap of target processors
 	mov dword [rsi+0xD0], eax
 
 	mov eax, dword [rsi+0xE0]	; Destination Format Register
