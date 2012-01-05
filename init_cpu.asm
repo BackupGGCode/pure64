@@ -142,16 +142,13 @@ init_cpu:
 	cmp rsi, 0x00000000
 	je noMP				; Skip MP init if we didn't get a valid LAPIC address
 
-;	mov ecx, 0x0000001B		; IA32_APIC_BASE MSR
-;	rdmsr				; Test bit 11
-;	call os_debug_dump_eax
-
-	mov eax, dword [rsi+0x80]	; Task Priority Register (TPR)
-	mov al, 0			; Clear Task Priority (bits 7:4) and Task Priority Sub-Class (bits 3:0)
-	mov dword [rsi+0x80], eax
+	xor eax, eax			; Clear Task/Arbitration Priority (bits 7:4) and Priority Sub-Class (bits 3:0)
+	mov dword [rsi+0x80], eax	; Task Priority Register (TPR)
+	mov dword [rsi+0x90], eax	; Arbitration Priority Register (APR)
 
 	mov eax, dword [rsi+0xD0]	; Logical Destination Register
-	or eax, 0xFF000000		; Set bits 31-24 for the bitmap of target processors
+	and eax, 0x00FFFFFF		; Clear bits 31-24
+	or eax, 0x01000000		; Set bits 31-24 for all cores to be in Group 1
 	mov dword [rsi+0xD0], eax
 
 	mov eax, dword [rsi+0xE0]	; Destination Format Register
