@@ -9,12 +9,13 @@
 ; Windows - copy /b pxestart.bin + pure64.sys + kernel64.sys pxeboot.bin
 ; Unix - cat pxestart.bin pure64.sys kernel64.sys > pxeboot.bin
 ;
-; Max size of the resulting pxeboot.bin is 32768 bytes. PXE loads the file to
-; address 0x00007C00 (Just like a boot sector).
+; Max size of the resulting pxeboot.bin is 33792 bytes. 1K for the PXE loader
+; stub and up to 32KiB for the code/data. PXE loads the file to address
+; 0x00007C00 (Just like a boot sector).
 ;
 ; File Sizes
 ; pxestart.bin	 1024 bytes
-; pure64.sys	 6144 bytes
+; pure64.sys	 7168 bytes
 ; kernel64.sys	16384 bytes (or so)
 ; =============================================================================
 
