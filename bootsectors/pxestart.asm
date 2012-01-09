@@ -4,7 +4,7 @@
 ;
 ; This is a stub file for chainloading Pure64 and a Kernel via PXE.
 ;
-; You will need to uncomment the Chainloading lines in pure64.asm
+; You will need to uncomment the PURE64_CHAIN_LOADING line in pure64.asm
 ;
 ; Windows - copy /b pxestart.bin + pure64.sys + kernel64.sys pxeboot.bin
 ; Unix - cat pxestart.bin pure64.sys kernel64.sys > pxeboot.bin

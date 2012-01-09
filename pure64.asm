@@ -9,6 +9,13 @@
 ; =============================================================================
 
 
+; If this is defined, Pure64 will chainload the kernel attached to the end of the pure64.sys binary
+; Windows - copy /b pure64.sys + kernel64.sys
+; Unix - cat pure64.sys kernel64.sys > pure64.sys
+; Max size of the resulting pure64.sys is 28672 bytes
+
+; %define PURE64_CHAIN_LOADING
+
 USE16
 ORG 0x00008000
 start:
@@ -705,16 +712,13 @@ nodefaultconfig:
 	call os_print_string
 
 ; =============================================================================
-; Chainload the kernel attached to the end of the pure64.sys binary
-; Windows - copy /b pure64.sys + kernel64.sys
-; Unix - cat pure64.sys kernel64.sys > pure64.sys
-; Max size of the resulting pure64.sys is 28672 bytes
-; Uncomment the following 5 lines if you are chainloading
-;	mov rsi, 0x8000+7168	; Memory offset to end of pure64.sys
-;	mov rdi, 0x100000	; Destination address at the 1MiB mark
-;	mov rcx, 0x1000		; For up to 32KiB kernel (4096 x 8)
-;	rep movsq		; Copy 8 bytes at a time
-;	jmp fini		; Print starting message and jump to kernel
+%ifdef PURE64_CHAIN_LOADING
+	mov rsi, 0x8000+7168	; Memory offset to end of pure64.sys
+	mov rdi, 0x100000	; Destination address at the 1MiB mark
+	mov rcx, 0x1000		; For up to 32KiB kernel (4096 x 8)
+	rep movsq		; Copy 8 bytes at a time
+	jmp fini		; Print starting message and jump to kernel
+%endif
 ; =============================================================================	
 
 ; Print a message that the kernel is being loaded
