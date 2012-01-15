@@ -137,34 +137,28 @@ init_cpu:
 ; Enable Math Co-processor
 	finit
 
-; Enable Local APIC
+; Enable and Configure Local APIC
 	mov rsi, [os_LocalAPICAddress]
 	cmp rsi, 0x00000000
 	je noMP				; Skip MP init if we didn't get a valid LAPIC address
 
-	xor eax, eax			; Clear Task/Arbitration Priority (bits 7:4) and Priority Sub-Class (bits 3:0)
+	xor eax, eax			; Clear Task Priority (bits 7:4) and Priority Sub-Class (bits 3:0)
 	mov dword [rsi+0x80], eax	; Task Priority Register (TPR)
-	mov dword [rsi+0x90], eax	; Arbitration Priority Register (APR)
 
-	mov eax, dword [rsi+0xD0]	; Logical Destination Register
-	and eax, 0x00FFFFFF		; Clear bits 31-24
-	or eax, 0x01000000		; Set bits 31-24 for all cores to be in Group 1
-	mov dword [rsi+0xD0], eax
+	mov eax, 0x01000000		; Set bits 31-24 for all cores to be in Group 1
+	mov dword [rsi+0xD0], eax	; Logical Destination Register
 
-	mov eax, dword [rsi+0xE0]	; Destination Format Register
-	or eax, 0xF0000000		; Set bits 31-28 for Flat Mode
-	mov dword [rsi+0xE0], eax
+	xor eax, eax
+	sub eax, 1			; Set EAX to 0xFFFFFFFF; Bits 31-28 set for Flat Mode
+	mov dword [rsi+0xE0], eax	; Destination Format Register
 
-	mov eax, dword [rsi+0xF0]	; Spurious Interrupt Register
+	mov eax, dword [rsi+0xF0]	; Spurious Interrupt Vector Register
 	mov al, 0xF8
 	bts eax, 8			; Enable APIC (Set bit 8)
 	mov dword [rsi+0xF0], eax
 
-	xor eax, eax
-	mov dword [rsi+0x280], eax	; Error Status Register
-
 	mov eax, dword [rsi+0x320]	; LVT Timer Register
-	bts eax, 16			;bit16:Mask interrupts (0==Unmasked, 1== Masked)
+	bts eax, 16			; Set bit 16 for mask interrupts
 	mov dword [rsi+0x320], eax
 
 ;	mov eax, dword [rsi+0x350]	; LVT LINT0 Register
