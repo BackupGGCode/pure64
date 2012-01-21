@@ -27,13 +27,13 @@ entry:
 times 0x3B db 0				; Code starts at offset 0x3E
 
 begin:
+	mov bp, 0x7c00
 	mov [bsDriveNumber], dl	; BIOS passes drive number in DL
 	xor eax, eax
 	xor esi, esi
 	xor edi, edi
 	mov ds, ax
 	mov es, ax
-	mov bp, 0x7c00
 
 ; Make sure the screen is set to 80x25 color text mode
 	mov ax, 0x0003			; Set to normal (80x25 text) video mode
