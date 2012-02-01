@@ -1,6 +1,6 @@
 ; =============================================================================
 ; Pure64 -- a 64-bit OS loader written in Assembly for x86-64 systems
-; Copyright (C) 2008-2011 Return Infinity -- see LICENSE.TXT
+; Copyright (C) 2008-2012 Return Infinity -- see LICENSE.TXT
 ;
 ; Loaded from the first stage. Gather information about the system while
 ; in 16-bit mode (BIOS is still accessable), setup a minimal 64-bit
@@ -9,12 +9,12 @@
 ; =============================================================================
 
 
+; %define PURE64_CHAIN_LOADING
 ; If this is defined, Pure64 will chainload the kernel attached to the end of the pure64.sys binary
 ; Windows - copy /b pure64.sys + kernel64.sys
 ; Unix - cat pure64.sys kernel64.sys > pure64.sys
 ; Max size of the resulting pure64.sys is 28672 bytes
 
-; %define PURE64_CHAIN_LOADING
 
 USE16
 ORG 0x00008000
