@@ -7,6 +7,11 @@
 
 
 init_ioapic:
+	mov al, 0x70			; IMCR access
+	out 0x22, al
+	mov al, 0x01			; set bit 1 for SMP mode
+	out 0x23, al
+
 	xor eax, eax
 	mov rcx, 1			; Register 1 - IOAPIC VERSION REGISTER
 	call ioapic_reg_read
@@ -26,8 +31,8 @@ initentry:				; Initialize all entries 1:1
 	jne initentry
 
 	; Enable the Keyboard
-	mov rcx, 1
-	mov rax, 0x21
+	mov rcx, 1			; IRQ value
+	mov rax, 0x21			; Interrupt value
 	call ioapic_entry_write
 
 	; Enable the RTC
