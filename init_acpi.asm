@@ -65,7 +65,7 @@ foundACPIv1_nextentry:
 	push rax
 	add ecx, 1
 	cmp ecx, edx
-	je findAPICTable
+	je findACPITables
 	jmp foundACPIv1_nextentry
 
 foundACPIv2:
@@ -93,21 +93,24 @@ foundACPIv2_nextentry:
 	cmp ecx, edx
 	jne foundACPIv2_nextentry
 
-findAPICTable:
-	mov al, '3'			; Search for the APIC table
+findACPITables:
+	mov al, '3'			; Search for the ACPI tables
 	mov [0x000B809C], al
 	mov al, '4'
 	mov [0x000B809E], al
-	mov ebx, 'APIC'			; Signature for the Multiple APIC Description Table
 	xor ecx, ecx
-searchingforAPIC:
+searchingfortables:
 	pop rsi
 	lodsd
 	add ecx, 1
+	mov ebx, 'APIC'			; Signature for the Multiple APIC Description Table
 	cmp eax, ebx
 	je foundAPICTable
+	mov ebx, 'HPET'			; Signiture for the HPET Description Table
+	cmp eax, ebx
+	je foundHPETTable
 	cmp ecx, edx
-	jne searchingforAPIC
+	jne searchingfortables
 	jmp noACPIAPIC
 
 fixstack:
@@ -244,6 +247,26 @@ APICignore:
 	add rsi, rax
 	sub rsi, 2			; For the two bytes just read
 	jmp readAPICstructures		; Read the next structure
+	
+foundHPETTable:
+	lodsd				; Length of HPET in bytes
+	lodsb				; Revision
+	lodsb				; Checksum
+	lodsd				; OEMID (First 4 bytes)
+	lodsw				; OEMID (Last 2 bytes)
+	lodsq				; OEM Table ID
+	lodsd				; OEM Revision
+	lodsd				; Creator ID
+	lodsd				; Creator Revision
+	lodsd				; Event Timer Block ID
+	lodsd				; Base Address Settings
+	lodsq				; Base Address Value
+	call os_debug_dump_rax
+	jmp $
+	lodsb				; HPET Number
+	lodsw				; Main Counter Minimum
+	lodsw				; Page Protection And OEM Attribute
+
 
 init_smp_acpi_done:
 	ret
