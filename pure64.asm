@@ -647,6 +647,10 @@ endmemcalc:
 	stosb
 
 	mov di, 0x5040
+	mov rax, [os_HPETAddress]
+	stosq
+
+	mov di, 0x5050
 	mov eax, [VBEModeInfoBlock.PhysBasePtr]
 	stosd
 	mov ax, [VBEModeInfoBlock.XResolution]

@@ -94,12 +94,13 @@ foundACPIv2_nextentry:
 	jne foundACPIv2_nextentry
 
 findACPITables:
-	mov al, '3'			; Search for the ACPI tables
+	mov al, '3'			; Search through the ACPI tables
 	mov [0x000B809C], al
 	mov al, '4'
 	mov [0x000B809E], al
 	xor ecx, ecx
-searchingfortables:
+nextACPITable:
+	xchg bx, bx
 	pop rsi
 	lodsd
 	add ecx, 1
@@ -110,17 +111,31 @@ searchingfortables:
 	cmp eax, ebx
 	je foundHPETTable
 	cmp ecx, edx
-	jne searchingfortables
-	jmp noACPIAPIC
-
-fixstack:
-	pop rax
-	add ecx, 1
+	jne nextACPITable
+	jmp init_smp_acpi_done		;noACPIAPIC
 
 foundAPICTable:
-	; fix the stack
-	cmp ecx, edx
-	jne fixstack
+	call parseAPICTable
+	jmp nextACPITable
+	
+foundHPETTable:
+	call parseHPETTable
+	jmp nextACPITable
+
+init_smp_acpi_done:
+	ret
+
+noACPI:
+novalidacpi:
+	mov al, 'X'
+	mov [0x000B809A], al	
+	jmp $
+
+
+; -----------------------------------------------------------------------------
+parseAPICTable:
+	push rcx
+	push rdx
 
 	lodsd				; Length of MADT in bytes
 	mov ecx, eax			; Store the length in ECX
@@ -142,7 +157,7 @@ foundAPICTable:
 
 readAPICstructures:
 	cmp ebx, ecx
-	jge init_smp_acpi_done
+	jge parseAPICTable_done
 ;	mov al, ' '
 ;	call os_print_char
 ;	call os_print_char
@@ -247,8 +262,16 @@ APICignore:
 	add rsi, rax
 	sub rsi, 2			; For the two bytes just read
 	jmp readAPICstructures		; Read the next structure
-	
-foundHPETTable:
+
+parseAPICTable_done:
+	pop rdx
+	pop rcx
+	ret
+; -----------------------------------------------------------------------------
+
+
+; -----------------------------------------------------------------------------
+parseHPETTable:
 	lodsd				; Length of HPET in bytes
 	lodsb				; Revision
 	lodsb				; Checksum
@@ -261,21 +284,13 @@ foundHPETTable:
 	lodsd				; Event Timer Block ID
 	lodsd				; Base Address Settings
 	lodsq				; Base Address Value
-	call os_debug_dump_rax
-	jmp $
+	mov [os_HPETAddress], rax	; Save the Address of the HPET
 	lodsb				; HPET Number
 	lodsw				; Main Counter Minimum
 	lodsw				; Page Protection And OEM Attribute
-
-
-init_smp_acpi_done:
 	ret
+; -----------------------------------------------------------------------------
 
-noACPI:
-noACPIAPIC:
-novalidacpi:
-	mov al, 'X'
-	mov [0x000B809A], al	
-	jmp $
+
 ; =============================================================================
 ; EOF
