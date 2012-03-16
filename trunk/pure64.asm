@@ -475,7 +475,10 @@ make_interrupt_gates: 			; make gates for the other interrupts
 
 	mov rdi, 0x21			; Set up Keyboard IRQ handler
 	mov rax, keyboard
-	call create_gate	
+	call create_gate
+;	mov rdi, 0x22
+;	mov rax, timer
+;	call create_gate
 	mov rdi, 0x28			; Set up RTC IRQ handler
 	mov rax, rtc
 	call create_gate
@@ -503,9 +506,11 @@ clearmapnext:
 
 	call init_acpi			; Find and process the ACPI tables
 
-	call init_cpu			; Setup CPU
+	call init_cpu			; Configure the BSP CPU
 
-	call init_ioapic		; Setup the IO-APIC(s), also activate interrupts
+	call init_ioapic		; Configure the IO-APIC(s), also activate interrupts
+
+;	call init_hpet			; Configure the HPET 
 
 ; Debug
 	mov al, '6'			; CPU Init complete
@@ -822,6 +827,7 @@ nokernelhalt:
 %include "init_cpu.asm"
 %include "init_acpi.asm"
 %include "init_ioapic.asm"
+%include "init_hpet.asm"
 %include "init_hdd.asm"
 %include "init_smp.asm"
 %include "syscalls.asm"
@@ -831,7 +837,7 @@ nokernelhalt:
 %include "sysvar.asm"
 
 ; Pad to an even KB file (6 KiB)
-times 7168-($-$$) db 0x90
+;times 7168-($-$$) db 0x90
 
 ; =============================================================================
 ; EOF
