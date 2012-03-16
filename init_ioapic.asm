@@ -35,11 +35,6 @@ initentry:				; Initialize all entries 1:1
 	mov rax, 0x21			; Interrupt value
 	call ioapic_entry_write
 
-	; Enable the Timer
-;	mov rcx, 2			; IRQ value
-;	mov rax, 0x22			; Interrupt value
-;	call ioapic_entry_write
-
 	; Enable the RTC
 	mov rcx, 8			; IRQ value
 	mov rax, 0x28			; Interrupt value
