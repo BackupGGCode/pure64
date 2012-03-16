@@ -100,7 +100,6 @@ findACPITables:
 	mov [0x000B809E], al
 	xor ecx, ecx
 nextACPITable:
-	xchg bx, bx
 	pop rsi
 	lodsd
 	add ecx, 1
@@ -158,9 +157,7 @@ parseAPICTable:
 readAPICstructures:
 	cmp ebx, ecx
 	jge parseAPICTable_done
-;	mov al, ' '
-;	call os_print_char
-;	call os_print_char
+;	call os_print_newline
 	lodsb				; APIC Structure Type
 ;	call os_debug_dump_al
 ;	push rax
@@ -211,11 +208,13 @@ APICioapic:
 	xor eax, eax
 	lodsd				; IO APIC Address
 	push rdi
+	push rcx
 	mov rdi, os_IOAPICAddress
 	xor ecx, ecx
 	mov cl, [os_IOAPICCount]
 	shl cx, 3			; Quick multiply by 8
 	add rdi, rcx
+	pop rcx
 	stosd				; Store the IO APIC Address
 	lodsd				; System Vector Base
 	stosd				; Store the IO APIC Vector Base
@@ -229,6 +228,7 @@ APICinterruptsourceoverride:
 	add ebx, eax
 	lodsb				; Bus
 	lodsb				; Source
+;	call os_print_newline
 ;	call os_debug_dump_al
 ;	mov al, ' '
 ;	call os_print_char
@@ -241,6 +241,7 @@ APICx2apic:
 	xor eax, eax
 	xor edx, edx
 	lodsb				; Length (will be set to 16)
+	add ebx, eax
 	lodsw				; Reserved; Must be Zero
 	lodsd
 	xchg eax, edx			; Save the x2APIC ID to EDX

@@ -86,8 +86,8 @@ msg_loadingkernel:	db 'Loading software', 0;...', 0
 msg_startingkernel:	db 'Starting software.', 0
 msg_noconfig:		db '(default config)', 0
 no64msg:		db 'ERROR: This computer does not support 64-Bit mode. Press any key to reboot.', 0
-initStartupMsg:		db 'Pure64 v0.5.0 - http://www.returninfinity.com', 13, 10, 13, 10, 'Initializing system... ', 0
-msg_date:		db '2011/12/19', 0
+initStartupMsg:		db 'Pure64 v0.5.1 - http://www.returninfinity.com', 13, 10, 13, 10, 'Initializing system... ', 0
+msg_date:		db '2012/03/16', 0
 hdd_setup_no_drive:	db 'No HDD detected', 0
 hdd_setup_read_error:	db 'Error reading HDD', 0
 
