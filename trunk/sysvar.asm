@@ -40,17 +40,17 @@ fat16_RootStart:	equ SystemVariables + 144
 fat16_PartitionOffset:	equ SystemVariables + 148
 sata_base:		equ SystemVariables + 152
 os_BSP:			equ SystemVariables + 156
+mem_amount:		equ SystemVariables + 160
 
 ; DW - Starting at offset 256, increments by 2
 cpu_speed:		equ SystemVariables + 256
 cpu_activated:		equ SystemVariables + 258
 cpu_detected:		equ SystemVariables + 260
-mem_amount:		equ SystemVariables + 262
-fat16_BytesPerSector:	equ SystemVariables + 264
-fat16_ReservedSectors:	equ SystemVariables + 266
-fat16_SectorsPerFat:	equ SystemVariables + 268
-fat16_RootDirEnts:	equ SystemVariables + 270
-ata_base:		equ SystemVariables + 272
+fat16_BytesPerSector:	equ SystemVariables + 262
+fat16_ReservedSectors:	equ SystemVariables + 264
+fat16_SectorsPerFat:	equ SystemVariables + 266
+fat16_RootDirEnts:	equ SystemVariables + 268
+ata_base:		equ SystemVariables + 270
 
 ; DB - Starting at offset 384, increments by 1
 hd1_enable:		equ SystemVariables + 384
@@ -87,7 +87,7 @@ msg_startingkernel:	db 'Starting software.', 0
 msg_noconfig:		db '(default config)', 0
 no64msg:		db 'ERROR: This computer does not support 64-Bit mode. Press any key to reboot.', 0
 initStartupMsg:		db 'Pure64 v0.5.1 - http://www.returninfinity.com', 13, 10, 13, 10, 'Initializing system... ', 0
-msg_date:		db '2012/03/16', 0
+msg_date:		db '2012/04/26', 0
 hdd_setup_no_drive:	db 'No HDD detected', 0
 hdd_setup_read_error:	db 'Error reading HDD', 0
 

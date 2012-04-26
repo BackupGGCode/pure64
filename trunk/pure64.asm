@@ -594,9 +594,9 @@ goodmem:
 
 endmemcalc:
 	shr rcx, 20		; Value is in bytes so do a quick divide by 1048576 to get MiB's
-	add cx, 1		; The BIOS will usually report actual memory minus 1
-	and cx, 0xFFFE		; Make sure it is an even number (in case we added 1 to an even number)
-	mov word [mem_amount], cx
+	add ecx, 1		; The BIOS will usually report actual memory minus 1
+	and ecx, 0xFFFFFFFE	; Make sure it is an even number (in case we added 1 to an even number)
+	mov dword [mem_amount], ecx
 
 ; Debug
 	mov al, '2'
@@ -616,7 +616,7 @@ endmemcalc:
 
 ; Convert RAM amount value to string
 	xor rax, rax
-	mov ax, [mem_amount]
+	mov eax, [mem_amount]
 	mov rdi, memtempstring
 	call os_int_to_string
 
@@ -638,7 +638,7 @@ endmemcalc:
 
 	mov di, 0x5020
 	mov ax, [mem_amount]
-	stosw
+	stosd
 
 	mov di, 0x5030
 	mov al, [cfg_mbr]
