@@ -71,6 +71,11 @@ no_mbr:
 	mov ax, 0x0003			; Set to normal (80x25 text) video mode
 	int 0x10
 
+; Hide the hardware cursor
+	mov ax, 0x0100			; VIDEO - SET TEXT-MODE CURSOR SHAPE
+	mov cx, 0x0706			; 0607 for underline, 0007 for full block
+	int 0x10
+
 ; Print message
 	mov si, initStartupMsg
 	call print_string_16
