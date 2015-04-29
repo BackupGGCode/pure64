@@ -1,0 +1,4 @@
+#Pure64
+Pure64 is a 64-bit software loader initially created for BareMetal OS. The loader gets the computer into a full 64-bit state with no legacy compatibility layers and also enables all available CPU Cores in the computer. If you need a quick way to boot a 64-bit AMD/Intel based computer that will enable all available processors and load your software then Pure64 is ideal. Pure64 keeps an information table in memory that stores important details about the computer (Amount of RAM and memory layout, number of CPU cores and their APIC IDs, etc). The Pure64 loader has been released separately so others can use it in their own software projects.
+
+![https://web.archive.org/web/20150429150828/http://pure64.googlecode.com/files/pure64-banner.jpg](https://web.archive.org/web/20150429150828/http://pure64.googlecode.com/files/pure64-banner.jpg)
